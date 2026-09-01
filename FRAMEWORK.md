@@ -3,13 +3,18 @@
 ## 0. The thesis, restated
 
 The marginal cost of writing software to address a market need is converging on zero.
-Therefore, instead of picking one company and betting years on it, we launch many small
-companies in parallel, instrument each one for demand signals (leads, conversions,
-retention), kill the ones that stay dark, and promote the one or two in twenty that show
-signs of life into fully-resourced companies.
+Therefore, instead of picking one company and betting years on it, we run cheap,
+evidence-ranked **launch tournaments**: batches of ~5 parallel launches, each
+instrumented for demand signals — with **paid usage and retention** as the signals that
+count — killing the ones that stay dark, concentrating attention and budget on survivors
+the week they clear a gate, and promoting the one or two in twenty that prove paid
+demand into fully-resourced companies.
 
-This document is the framework for the **selection** problem: which twenty do we launch,
-and how do we decide, early and cheaply, which ones to kill and which to promote.
+This document is the framework for the **selection** problem: which launches enter each
+tournament, and how we decide, early and cheaply, which to kill, which to concentrate
+on, and which to promote. The model's structural risks and the four modifications
+adopted in response are argued in `CRITIQUE.md`; this document reflects the
+post-critique model.
 
 ---
 
@@ -96,6 +101,16 @@ This is the greenfield. The best targets share a shape:
 - Practitioners congregate somewhere reachable (trade association, subreddit, conference,
   a LinkedIn-searchable job title) — so lead generation can be automated.
 
+**Default entry mode for this lane: sell the work before building the product.** Where
+the workflow allows, the first offer is an AI-powered productized service — the outcome
+the buyer already pays a consultant, vendor, or headcount for, delivered part-manually
+at first. Revenue, repeat purchase, and renewal become the demand signal (the only
+signals that survive the selection bias in §1), and manual delivery generates exactly
+the workflow knowledge and proprietary data (dimension 7) the eventual product needs.
+Software is codified from what customers already pay for, not launched on spec. A
+launch's delivery mode — service-first or self-serve product — is declared at G0 and
+determines which gate profile in §4 applies.
+
 ---
 
 ## 3. The selection scorecard
@@ -120,25 +135,33 @@ to make kill decisions later feel less personal.
 **Weighting:** dimensions 2 and 3 (reachability, time-to-signal) are *gating*, not just
 scored — a candidate that fails either is untestable in this system regardless of how
 attractive it is, and belongs in a different (conviction-funded) process, not this one.
-Dimensions 6 and 7 are what separate a real company from a demo.
+For dimension 3, the signal that must arrive quickly is a *payment or paid commitment*,
+not a lead. Dimensions 6 and 7 are what separate a real company from a demo. Dimension 8
+includes operator-bench fit: at equal scores, a candidate matched to a bench operator
+(§5) outranks an unmatched one, and clearing G0 without a plausible operator match is an
+explicit exception, not the norm.
 
 ---
 
 ## 4. The signal engine: how "signs of life" are measured
 
-Every launch ships with the same instrumentation so cohorts are comparable. The stage
-gates, with default thresholds (tune per category, but write the threshold down *before*
-launch — moving goalposts after seeing data is how zombie companies are born):
+Every launch ships with the same instrumentation so tournaments are comparable. **Paid
+usage and retention are the primary signals; lead metrics are demoted to a G1
+reachability check** — leads are the most gameable, least predictive metric in an
+AI-saturated channel world, and gating on them selects for detectable markets rather
+than durable ones (see `CRITIQUE.md` §1). Default thresholds below — tune per category,
+but write the threshold down *before* launch; moving goalposts after seeing data is how
+zombie companies are born.
 
 | Gate | What we ship | Signal we need | Budget/time cap | Kill condition |
 |------|--------------|----------------|-----------------|----------------|
-| **G0 — Thesis** | Scorecard + one-page memo | Score clears bar; a named buyer persona; a named channel | 2 days | Fails a gating dimension |
-| **G1 — Smoke** | Landing page + outbound sequence / ads to ~1–2k targets | ≥ 2–5% qualified conversion (email captured, call booked, waitlist with intent question answered) | $1–2k, 2–3 weeks | Sub-1% with two message/angle iterations |
-| **G2 — Product signal** | Working product (AI-built, narrow wedge) in the hands of signups | Activation: ≥ 30–40% of signups reach the core "aha" action; unprompted usage in week 2 | 4–6 weeks | Users try once and vanish despite onboarding fixes |
-| **G3 — Money** | Pricing page, paid pilot, or pre-order | ≥ 3–5 paying customers or signed pilots, at least one from pure outbound (not a friend) | 4–8 weeks | Everyone loves it, nobody pays |
-| **G4 — Promote** | Decision memo | Retention curve flattening + payback math + repeatable channel | — | — |
+| **G0 — Thesis** | Scorecard + one-page memo | Score clears bar; named buyer persona, channel, delivery mode (service-first or self-serve), cluster assignment, operator match | 2 days | Fails a gating dimension |
+| **G1 — Reachability** | Landing page + outbound sequence / ads to ~1–2k targets | Proof the buyer is reachable and the pain resonates: ≥ 2–5% qualified conversion (call booked, service inquiry, high-intent capture). A pass here proves *testability*, not demand | $1–2k, 2–3 weeks | Sub-1% with two message/angle iterations |
+| **G2 — Engagement** | *Service-first:* first paid engagements, delivered part-manually. *Self-serve:* working wedge product in signups' hands | *Service-first:* ≥ 2–3 paid engagements delivered and accepted. *Self-serve:* ≥ 30–40% activation and unprompted week-2 return | 4–6 weeks | No one pays for the service / users try once and vanish despite fixes |
+| **G3 — Retention** | Pricing, renewals, repeat engagements | ≥ 3–5 paying customers with at least one from pure outbound (not a friend), **and at least one renewal or repeat purchase** | 4–8 weeks | Everyone buys once, nobody comes back |
+| **G4 — Promote** | Decision memo | Retention curve flattening + payback math + repeatable channel + operator committed | — | — |
 
-Two rules that matter more than the thresholds:
+Three rules that matter more than the thresholds:
 
 - **The kill decision is the default; promotion requires evidence.** With a 5–10% expected
   hit rate, the portfolio's biggest risk is not failed launches — it is *ambiguous,
@@ -148,48 +171,76 @@ Two rules that matter more than the thresholds:
 - **One re-angle per gate.** A weak G1 earns exactly one repositioning attempt (new
   message, new segment, same product thesis). If the second attempt also misses, the
   thesis is wrong, not the copy.
+- **Concentration is immediate, not ceremonial.** A G2 pass triggers a step-change in
+  attention and budget *that week* — the matched operator goes hands-on, spend caps
+  rise, the launch jumps the review queue. The window between "signs of life" and "a
+  fully-focused competitor catches up" is short; the tournament's alpha is speed of
+  reallocation, not breadth of deployment.
 
-What counts as a lead is defined per category at G0 (self-serve: activated signup;
-SMB sales-assisted: booked call held; anything heavier probably fails the gating
-dimensions and shouldn't be in this portfolio).
+A launch's gate profile follows its G0-declared delivery mode; anything heavier than
+SMB sales-assisted probably fails the gating dimensions and shouldn't be in this
+portfolio.
 
 ---
 
 ## 5. Portfolio construction
 
-- **Batch size and cadence:** launch in cohorts (e.g. 5 at a time, every 6–8 weeks) rather
-  than 20 at once — the launch stack improves with each cohort, and later launches inherit
-  it.
+- **Tournament, not lottery.** Launch in tournaments of ~5 every 6–8 weeks, never 20 at
+  once at equal weight. Kill fast, and *concentrate immediately* on survivors — a gate
+  pass reallocates attention and budget the same week (§4). The portfolio's alpha comes
+  from speed of reallocation, not breadth of deployment; the launch stack also improves
+  with each tournament, and later launches inherit it.
+- **Cluster by audience.** At least half of each tournament targets one or two shared
+  audience verticals, so each launch compounds a durable studio asset in that vertical —
+  the list, the brand trust, the community presence, the data — instead of rebuying
+  attention from zero. Sequential correlation is a strategy: successive launches into a
+  cluster get cheaper and more credible, and the cluster converges toward a vertical
+  platform. *Simultaneous* launches to the same persona through the same channel still
+  compete for the same attention — stagger those within a cluster.
 - **Diversify across the two lanes:** both are legitimate; only head-on attacks on
   incumbent installed bases (§2.1) are excluded. As a starting mix, roughly 2/3 vertical
-  greenfield (§2.3) and 1/3 product-substitution (§2.2), then let gate outcomes per cohort
-  adjust the ratio. The vertical lane tends toward better moats; the substitution lane
-  toward faster, cleaner demand signals — don't let the dashboard's legibility alone bias
-  the whole portfolio into the substitution lane.
-- **Correlated bets are fine, correlated channels are not.** Two launches selling to the
-  same buyer persona through the same channel compete with each other for the same
-  attention; stagger them.
+  greenfield (§2.3) and 1/3 product-substitution (§2.2), then let gate outcomes per
+  tournament adjust the ratio. The vertical lane tends toward better moats; the
+  substitution lane toward faster, more flattering signals and more capital-hungry wins —
+  don't let the dashboard's legibility alone bias the whole portfolio into it.
+- **Operator bench before scale.** Recruit a bench of 3–5 hungry domain operators before
+  scaling launch volume — it is the slowest asset to build and it gates promotion.
+  Candidates are matched to bench operators at G0 where possible; a matched operator goes
+  hands-on at the G2 concentration trigger and receives real founder equity from day one,
+  not a minority stake at promotion. The operator-equity model must be resolved on paper
+  before the first tournament (§7).
 - **Cost model:** at roughly $3–8k fully-loaded per launch through G2, twenty launches cost
   less than one seed-stage engineer-year. The binding constraint is not money — it is
   decision-making attention at the gates. Protect gate reviews; they are the actual product
   of the studio.
-- **Promotion is a re-founding, not a graduation.** A G4 company gets a dedicated operator,
-  its own cap table, and leaves the shared launch stack. The studio keeps the playbook,
-  the channel learnings, and equity.
+- **Kills are wound down respectfully.** Each vertical community is a durable asset the
+  studio may return to: killed launches give users notice and a data export, honor
+  refunds on undelivered service work, and keep domains alive. Eighteen abandoned brands
+  with complaint residue can poison a cluster for a later, serious entry.
+- **Promotion formalizes what concentration started.** With the operator hands-on since
+  G2, a G4 promotion is the paperwork moment — own entity, own cap table, leaving the
+  shared launch stack — not a search for a founder. The studio keeps the playbook, the
+  channel learnings, the cluster assets, and equity.
 
 ---
 
 ## 6. What the system automates (build order, once we commit)
 
-1. **Intake & scoring** — candidate registry, the §3 scorecard, G0 memos.
-2. **Launch stack** — templated landing pages, outbound sequencing (Apollo or similar),
-   ad deployment, shared analytics with the §4 gate metrics computed identically for
+The full build specification lives in `ENGINE-SPEC.md` (which names the operating
+stack: Neubloc for email, Vox for social, Forum for CRM). In summary:
+
+1. **Intake & scoring** — candidate registry, the §3 scorecard, G0 memos with delivery
+   mode, cluster assignment, and operator match.
+2. **Launch stack** — templated landing/booking pages, outbound sequencing, social
+   distribution, shared CRM pipelines, with the §4 gate metrics computed identically for
    every launch.
-3. **Cohort dashboard** — every live launch against its gate, days-to-cap remaining,
-   kill/extend/promote queue.
+3. **Tournament dashboard** — every live launch against its gate, days-to-cap remaining,
+   the kill/extend/promote queue, and the G2 concentration trigger.
 4. **Domain-expert synthesis** — the AI research pipeline that maps a vertical (workflow,
    regulations, tooling, communities, job titles) and drafts the G0 memo, so candidate
    generation itself approaches zero cost.
+5. **Operator bench registry** — the bench, their domain profiles, current load, and
+   candidate matching at G0.
 
 The system should make killing easy and launching cheap. If it ever makes launches feel
 precious, it has failed.
@@ -198,13 +249,20 @@ precious, it has failed.
 
 ## 7. Open questions to resolve before building
 
-1. **Legal/ops chassis:** one holding entity with DBAs per launch until promotion, or an
-   entity per launch? (Holding-entity-until-promotion is cheaper and faster; confirm with
-   counsel.)
+1. **Legal/ops chassis and the operator-equity model — must be resolved before the
+   first tournament.** One holding entity with DBAs per launch until promotion, or an
+   entity per launch (holding-entity-until-promotion is cheaper and faster; confirm with
+   counsel)? And the harder one: what equity does a bench operator get at match, at the
+   G2 concentration trigger, and at spinout? If honest studio economics only work with
+   studio-heavy ownership, that conflicts with attracting real operators — resolve the
+   conflict on paper now, not at the first spinout negotiation.
 2. **Naming/branding debt:** cheap-to-launch brands that don't embarrass a promoted
-   company later.
-3. **What happens to killed launches' assets** — the code is worthless by thesis, but the
-   channel data and the vertical research are not; they need a home the next cohort reads.
+   company later — with cluster-shared brands (§5) raising the stakes, since a cluster
+   brand outlives any single launch.
+3. **Killed launches' assets:** the wind-down protocol and post-mortem write-back are
+   specified in `ENGINE-SPEC.md` (Phase 3); what remains open is retention policy —
+   how long domains, lists, and service commitments are maintained after a kill.
 4. **Human bandwidth at the gates:** who reviews, and what is the max number of concurrent
-   live launches one reviewer can honestly evaluate? That number, not budget, sets batch
-   size.
+   live launches one reviewer can honestly evaluate? That number, not budget, sets
+   tournament size — and the G2 concentration rule tightens it further, since every
+   survivor consumes a multiple of a probe's attention.

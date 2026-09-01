@@ -1,5 +1,13 @@
 # A Hard Look at the Parallel-Launch Thesis
 
+> **Status (2026-09-01): all four recommendations adopted** and reconciled into
+> `FRAMEWORK.md` (thesis restated around tournaments and paid signals; §2.3
+> service-first default; §4 gates rebuilt on paid usage/retention with the
+> concentration rule; §5 clustering, operator bench, and respectful wind-downs) and
+> `ENGINE-SPEC.md` (Cluster and Operator objects, G0 declarations, service-first
+> launch stack, concentration trigger, wind-down workflow). This document is kept as
+> the argument of record for *why* the model has its current shape.
+
 Companion to `FRAMEWORK.md` and `ENGINE-SPEC.md`. Those documents assume the thesis and
 optimize its execution. This one attacks it, then proposes modifications that keep what
 is right about it while fixing the weakest joints.
