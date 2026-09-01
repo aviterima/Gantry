@@ -1,0 +1,16 @@
+name = "gantry"
+main = "src/worker.js"
+compatibility_date = "2026-08-01"
+
+# The deploy script (deploy.sh) creates the KV namespace on first run and
+# fills in the id below. A placeholder id fails fast with a clear error.
+kv_namespaces = [
+  { binding = "GANTRY_KV", id = "REPLACED_BY_DEPLOY_SH" }
+]
+
+[[rules]]
+type = "Text"
+globs = ["**/*.html"]
+
+# Secrets (set once, not stored here):
+#   npx wrangler secret put GANTRY_SECRET   # any long random string

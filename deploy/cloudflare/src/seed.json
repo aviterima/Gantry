@@ -1,0 +1,427 @@
+{
+ "candidates": [
+  {
+   "slug": "permit-pilot",
+   "name": "PermitPilot",
+   "one_liner": "AI permit-expediting service for small general contractors: we prepare, file, and chase municipal permits so the GC never sits in a queue.",
+   "lane": "vertical",
+   "delivery_mode": "service_first",
+   "persona": "Owner/office manager at a 5-30 person GC doing residential and light commercial work.",
+   "channel": "Outbound email to licensed GCs (public license rolls) + construction-smb cluster list.",
+   "cluster": "construction-smb",
+   "cluster_exception": "",
+   "operator": "jordan-reyes",
+   "operator_exception": "",
+   "case_against": "Municipal heterogeneity may resist automation: every jurisdiction is a special case, and margins could collapse into manual labor that never productizes. Expediting relationships with clerks may matter more than filing quality.",
+   "kill_criterion": "Kill if >50% of engagement hours are still manual after 10 filings across 3 jurisdictions, or turnaround beats the GC's own baseline by <20%.",
+   "scorecard": {
+    "dimensions": {
+     "pain_intensity": {
+      "score": 5,
+      "evidence": "Permit delays stall jobs and crews; GCs quote 2-6 week losses per project."
+     },
+     "buyer_reachability": {
+      "score": 5,
+      "evidence": "Public contractor license registries; 40k+ emails harvestable; cluster list exists."
+     },
+     "time_to_signal": {
+      "score": 4,
+      "evidence": "Service-first: paid expediting engagements can close in 2-3 weeks."
+     },
+     "budget_existence": {
+      "score": 5,
+      "evidence": "GCs already pay human expediters $500-2k per permit."
+     },
+     "incumbent_exposure": {
+      "score": 4,
+      "evidence": "No horizontal incumbent owns municipal permitting workflows."
+     },
+     "ai_leverage": {
+      "score": 4,
+      "evidence": "AI drafts applications, tracks jurisdiction rules, chases status \u2014 the expert work."
+     },
+     "moat_trajectory": {
+      "score": 4,
+      "evidence": "Jurisdiction rulebook + outcome data compounds per filing."
+     },
+     "founder_market_access": {
+      "score": 4,
+      "evidence": "Jordan (bench) sold into SMB GCs for 6 years."
+     },
+     "expansion_path": {
+      "score": 4,
+      "evidence": "Inspections scheduling, lien waivers, licensing renewals to the same buyer."
+     },
+     "portfolio_synergy": {
+      "score": 5,
+      "evidence": "Anchor launch for the construction-smb cluster."
+     }
+    }
+   },
+   "thresholds": {
+    "g1_reachability": "\u22653% qualified reply/booking rate on 1,500 outbound contacts",
+    "g2_engagement": "\u22653 paid expediting engagements delivered and accepted",
+    "g3_retention": "\u22654 paying GCs, \u22651 from pure outbound, \u22651 repeat filing",
+    "budget_cap_usd": 2000,
+    "time_cap_weeks": 3
+   },
+   "memo": "# G0 Memo \u2014 PermitPilot\n\n**Thesis:** AI permit-expediting service for small general contractors: we prepare, file, and chase municipal permits so the GC never sits in a queue.\n\n- **Lane:** Lane two \u2014 vertical, AI as domain expert (FRAMEWORK \u00a72.3)\n- **Delivery mode:** Service-first (sell the work before building the product)\n- **Buyer persona:** Owner/office manager at a 5-30 person GC doing residential and light commercial work.\n- **Primary channel:** Outbound email to licensed GCs (public license rolls) + construction-smb cluster list.\n- **Cluster:** construction-smb\n- **Operator match:** jordan-reyes\n\n## Scorecard\n\n| Dimension | Score | Evidence |\n|---|---|---|\n| pain_intensity | 5 | Permit delays stall jobs and crews; GCs quote 2-6 week losses per project. |\n| buyer_reachability *(gating)* | 5 | Public contractor license registries; 40k+ emails harvestable; cluster list exists. |\n| time_to_signal *(gating)* | 4 | Service-first: paid expediting engagements can close in 2-3 weeks. |\n| budget_existence | 5 | GCs already pay human expediters $500-2k per permit. |\n| incumbent_exposure | 4 | No horizontal incumbent owns municipal permitting workflows. |\n| ai_leverage | 4 | AI drafts applications, tracks jurisdiction rules, chases status \u2014 the expert work. |\n| moat_trajectory | 4 | Jurisdiction rulebook + outcome data compounds per filing. |\n| founder_market_access | 4 | Jordan (bench) sold into SMB GCs for 6 years. |\n| expansion_path | 4 | Inspections scheduling, lien waivers, licensing renewals to the same buyer. |\n| portfolio_synergy | 5 | Anchor launch for the construction-smb cluster. |\n\n**Total:** 44 / 50 \u2014 band: **STRONG** (Rare. Launch early in the next tournament.)\n\n## Case against (required at G0)\n\nMunicipal heterogeneity may resist automation: every jurisdiction is a special case, and margins could collapse into manual labor that never productizes. Expediting relationships with clerks may matter more than filing quality.\n\n**Kill criterion:** Kill if >50% of engagement hours are still manual after 10 filings across 3 jurisdictions, or turnaround beats the GC's own baseline by <20%.\n\n## Pre-committed thresholds (locked at G0)\n\n- **G1 reachability:** \u22653% qualified reply/booking rate on 1,500 outbound contacts\n- **G2 engagement:** \u22653 paid expediting engagements delivered and accepted\n- **G3 retention:** \u22654 paying GCs, \u22651 from pure outbound, \u22651 repeat filing\n- **Caps:** $2,000 / 3 weeks\n\n## Decision\n\n_Pending G0 review._\n",
+   "decision": null,
+   "created_at": "2026-09-01T15:51:21.410800Z"
+  },
+  {
+   "slug": "complicore",
+   "name": "CompliCore",
+   "one_liner": "AI QA/compliance expert for specialty food manufacturers: FSMA plans, audit prep, and supplier docs delivered as a service, then productized.",
+   "lane": "vertical",
+   "delivery_mode": "service_first",
+   "persona": "QA manager or owner at a 10-200 person specialty food producer / co-packer.",
+   "channel": "Vox social in food-manufacturing communities + outbound to FDA registration lists.",
+   "cluster": "specialty-food",
+   "cluster_exception": "",
+   "operator": "priya-natarajan",
+   "operator_exception": "",
+   "case_against": "Audit-prep buying is episodic; retainers may not stick between audit cycles, leaving a services business whose software margins never materialize. Liability exposure if a plan we drafted fails an audit.",
+   "kill_criterion": "Kill if fewer than 1 of the first 5 customers converts to a monthly compliance retainer within 60 days of audit completion.",
+   "scorecard": {
+    "dimensions": {
+     "pain_intensity": {
+      "score": 5,
+      "evidence": "Failed audits stop shipments; SQF/FSMA deadlines are forcing events."
+     },
+     "buyer_reachability": {
+      "score": 4,
+      "evidence": "FDA facility registrations are public; active communities identified."
+     },
+     "time_to_signal": {
+      "score": 4,
+      "evidence": "Audit-prep engagements are bought under deadline pressure."
+     },
+     "budget_existence": {
+      "score": 5,
+      "evidence": "They already pay consultants $10-30k per audit cycle."
+     },
+     "incumbent_exposure": {
+      "score": 5,
+      "evidence": "Incumbent QMS vendors target enterprise; SMB tier is greenfield."
+     },
+     "ai_leverage": {
+      "score": 5,
+      "evidence": "The product *is* the domain expert: plan drafting, gap analysis, doc chasing."
+     },
+     "moat_trajectory": {
+      "score": 4,
+      "evidence": "Corpus of audit findings and supplier docs compounds."
+     },
+     "founder_market_access": {
+      "score": 5,
+      "evidence": "Priya (bench) ran QA at a co-packer."
+     },
+     "expansion_path": {
+      "score": 4,
+      "evidence": "Supplier verification, label compliance, recall drills."
+     },
+     "portfolio_synergy": {
+      "score": 4,
+      "evidence": "Anchor launch for the specialty-food cluster."
+     }
+    }
+   },
+   "thresholds": {
+    "g1_reachability": "\u22652.5% qualified inquiry rate across outbound + community posts",
+    "g2_engagement": "\u22652 paid audit-prep engagements delivered",
+    "g3_retention": "\u22653 paying customers, \u22651 on a monthly compliance retainer",
+    "budget_cap_usd": 2000,
+    "time_cap_weeks": 3
+   },
+   "memo": "# G0 Memo \u2014 CompliCore\n\n**Thesis:** AI QA/compliance expert for specialty food manufacturers: FSMA plans, audit prep, and supplier docs delivered as a service, then productized.\n\n- **Lane:** Lane two \u2014 vertical, AI as domain expert (FRAMEWORK \u00a72.3)\n- **Delivery mode:** Service-first (sell the work before building the product)\n- **Buyer persona:** QA manager or owner at a 10-200 person specialty food producer / co-packer.\n- **Primary channel:** Vox social in food-manufacturing communities + outbound to FDA registration lists.\n- **Cluster:** specialty-food\n- **Operator match:** priya-natarajan\n\n## Scorecard\n\n| Dimension | Score | Evidence |\n|---|---|---|\n| pain_intensity | 5 | Failed audits stop shipments; SQF/FSMA deadlines are forcing events. |\n| buyer_reachability *(gating)* | 4 | FDA facility registrations are public; active communities identified. |\n| time_to_signal *(gating)* | 4 | Audit-prep engagements are bought under deadline pressure. |\n| budget_existence | 5 | They already pay consultants $10-30k per audit cycle. |\n| incumbent_exposure | 5 | Incumbent QMS vendors target enterprise; SMB tier is greenfield. |\n| ai_leverage | 5 | The product *is* the domain expert: plan drafting, gap analysis, doc chasing. |\n| moat_trajectory | 4 | Corpus of audit findings and supplier docs compounds. |\n| founder_market_access | 5 | Priya (bench) ran QA at a co-packer. |\n| expansion_path | 4 | Supplier verification, label compliance, recall drills. |\n| portfolio_synergy | 4 | Anchor launch for the specialty-food cluster. |\n\n**Total:** 45 / 50 \u2014 band: **STRONG** (Rare. Launch early in the next tournament.)\n\n## Case against (required at G0)\n\nAudit-prep buying is episodic; retainers may not stick between audit cycles, leaving a services business whose software margins never materialize. Liability exposure if a plan we drafted fails an audit.\n\n**Kill criterion:** Kill if fewer than 1 of the first 5 customers converts to a monthly compliance retainer within 60 days of audit completion.\n\n## Pre-committed thresholds (locked at G0)\n\n- **G1 reachability:** \u22652.5% qualified inquiry rate across outbound + community posts\n- **G2 engagement:** \u22652 paid audit-prep engagements delivered\n- **G3 retention:** \u22653 paying customers, \u22651 on a monthly compliance retainer\n- **Caps:** $2,000 / 3 weeks\n\n## Decision\n\n_Pending G0 review._\n",
+   "decision": null,
+   "created_at": "2026-09-01T15:51:21.410941Z"
+  },
+  {
+   "slug": "ledgerlite",
+   "name": "LedgerLite",
+   "one_liner": "De-configured, AI-native fund administration for micro-VCs and syndicates priced at 1/10th of the legacy fund-admin stack.",
+   "lane": "substitution",
+   "delivery_mode": "self_serve",
+   "persona": "GP or ops lead at a sub-$50M fund or active syndicate, no back office.",
+   "channel": "Founder/VC social (Vox), emerging-manager communities, targeted outbound.",
+   "cluster": null,
+   "cluster_exception": "Substitution-lane launch; buyer pool (emerging managers) doesn't map to a current cluster. Revisit if a fintech cluster forms.",
+   "operator": "sam-okafor",
+   "operator_exception": "",
+   "case_against": "Fund admin is a trust purchase: emerging managers may pay legacy premiums precisely because LPs recognize the name, and 'cheap + AI' could read as audit risk rather than efficiency.",
+   "kill_criterion": "Kill if >=3 qualified GPs cite LP acceptance as the blocker and none converts after we provide an LP-facing assurance letter.",
+   "scorecard": {
+    "dimensions": {
+     "pain_intensity": {
+      "score": 4,
+      "evidence": "Emerging managers defer admin until an LP or audit forces it."
+     },
+     "buyer_reachability": {
+      "score": 4,
+      "evidence": "Form D filings are public; emerging-manager communities are dense."
+     },
+     "time_to_signal": {
+      "score": 3,
+      "evidence": "Self-serve signups fast; paid conversion tied to quarter-end cycles."
+     },
+     "budget_existence": {
+      "score": 5,
+      "evidence": "They already pay $15-40k/yr to legacy fund admins."
+     },
+     "incumbent_exposure": {
+      "score": 3,
+      "evidence": "Legacy admins could ship a cheap tier, but their cost base resists it."
+     },
+     "ai_leverage": {
+      "score": 4,
+      "evidence": "AI handles capital-call docs, K-1 prep support, LP reporting."
+     },
+     "moat_trajectory": {
+      "score": 3,
+      "evidence": "Workflow embedding and multi-year records; weaker data moat."
+     },
+     "founder_market_access": {
+      "score": 3,
+      "evidence": "Sam is a generalist; no deep fund-admin background on bench."
+     },
+     "expansion_path": {
+      "score": 4,
+      "evidence": "Tax docs, LP portal, compliance calendar."
+     },
+     "portfolio_synergy": {
+      "score": 3,
+      "evidence": "Reuses launch stack; no cluster sharing."
+     }
+    }
+   },
+   "thresholds": {
+    "g1_reachability": "\u22653% qualified signup rate on 1,000 targeted contacts",
+    "g2_engagement": "\u226535% of signups complete fund setup and issue one capital call",
+    "g3_retention": "\u22654 paying funds, \u22651 from pure outbound, \u22651 renewal into a second quarter",
+    "budget_cap_usd": 2000,
+    "time_cap_weeks": 3
+   },
+   "memo": "# G0 Memo \u2014 LedgerLite\n\n**Thesis:** De-configured, AI-native fund administration for micro-VCs and syndicates priced at 1/10th of the legacy fund-admin stack.\n\n- **Lane:** Lane one \u2014 product substitution (FRAMEWORK \u00a72.2)\n- **Delivery mode:** Self-serve product\n- **Buyer persona:** GP or ops lead at a sub-$50M fund or active syndicate, no back office.\n- **Primary channel:** Founder/VC social (Vox), emerging-manager communities, targeted outbound.\n- **Cluster:** _exception: Substitution-lane launch; buyer pool (emerging managers) doesn't map to a current cluster. Revisit if a fintech cluster forms._\n- **Operator match:** sam-okafor\n\n## Scorecard\n\n| Dimension | Score | Evidence |\n|---|---|---|\n| pain_intensity | 4 | Emerging managers defer admin until an LP or audit forces it. |\n| buyer_reachability *(gating)* | 4 | Form D filings are public; emerging-manager communities are dense. |\n| time_to_signal *(gating)* | 3 | Self-serve signups fast; paid conversion tied to quarter-end cycles. |\n| budget_existence | 5 | They already pay $15-40k/yr to legacy fund admins. |\n| incumbent_exposure | 3 | Legacy admins could ship a cheap tier, but their cost base resists it. |\n| ai_leverage | 4 | AI handles capital-call docs, K-1 prep support, LP reporting. |\n| moat_trajectory | 3 | Workflow embedding and multi-year records; weaker data moat. |\n| founder_market_access | 3 | Sam is a generalist; no deep fund-admin background on bench. |\n| expansion_path | 4 | Tax docs, LP portal, compliance calendar. |\n| portfolio_synergy | 3 | Reuses launch stack; no cluster sharing. |\n\n**Total:** 36 / 50 \u2014 band: **CREDIBLE** (Launchable \u2014 queue it.)\n\n## Case against (required at G0)\n\nFund admin is a trust purchase: emerging managers may pay legacy premiums precisely because LPs recognize the name, and 'cheap + AI' could read as audit risk rather than efficiency.\n\n**Kill criterion:** Kill if >=3 qualified GPs cite LP acceptance as the blocker and none converts after we provide an LP-facing assurance letter.\n\n## Pre-committed thresholds (locked at G0)\n\n- **G1 reachability:** \u22653% qualified signup rate on 1,000 targeted contacts\n- **G2 engagement:** \u226535% of signups complete fund setup and issue one capital call\n- **G3 retention:** \u22654 paying funds, \u22651 from pure outbound, \u22651 renewal into a second quarter\n- **Caps:** $2,000 / 3 weeks\n\n## Decision\n\n_Pending G0 review._\n",
+   "decision": null,
+   "created_at": "2026-09-01T15:51:21.410969Z"
+  },
+  {
+   "slug": "harbordesk",
+   "name": "HarborDesk",
+   "one_liner": "Ops platform for port agency and vessel husbandry workflows.",
+   "lane": "vertical",
+   "delivery_mode": "self_serve",
+   "persona": "Port agents coordinating vessel calls at mid-size ports.",
+   "channel": "Unclear \u2014 no automatable channel identified; relationship-driven industry.",
+   "cluster": null,
+   "cluster_exception": "No cluster fit; maritime is a one-off.",
+   "operator": null,
+   "operator_exception": "No bench operator with maritime background.",
+   "case_against": "",
+   "kill_criterion": "",
+   "scorecard": {
+    "dimensions": {
+     "pain_intensity": {
+      "score": 4,
+      "evidence": "Real coordination pain across agents, terminals, and masters."
+     },
+     "buyer_reachability": {
+      "score": 2,
+      "evidence": "Buyers are unreachable via automatable channels \u2014 port agency is relationship-driven; no public roll, no dense community found."
+     },
+     "time_to_signal": {
+      "score": 2,
+      "evidence": "Procurement runs through long relationship cycles; no fast paid commitment plausible."
+     },
+     "budget_existence": {
+      "score": 3,
+      "evidence": "Budgets exist but sit inside agency fees."
+     },
+     "incumbent_exposure": {
+      "score": 4,
+      "evidence": "No dominant horizontal incumbent."
+     },
+     "ai_leverage": {
+      "score": 3,
+      "evidence": "Some document automation; core value is coordination."
+     },
+     "moat_trajectory": {
+      "score": 3,
+      "evidence": "Port-pair operational data could compound."
+     },
+     "founder_market_access": {
+      "score": 2,
+      "evidence": "No bench operator; domain trust is earned over years."
+     },
+     "expansion_path": {
+      "score": 3,
+      "evidence": "Customs docs, disbursement accounts."
+     },
+     "portfolio_synergy": {
+      "score": 2,
+      "evidence": "Nothing shared with current clusters."
+     }
+    }
+   },
+   "thresholds": {
+    "g1_reachability": "n/a \u2014 fails gating",
+    "g2_engagement": "n/a",
+    "g3_retention": "n/a",
+    "budget_cap_usd": 2000,
+    "time_cap_weeks": 3
+   },
+   "memo": "# G0 Memo \u2014 HarborDesk\n\n**Thesis:** Ops platform for port agency and vessel husbandry workflows.\n\n- **Lane:** Lane two \u2014 vertical, AI as domain expert (FRAMEWORK \u00a72.3)\n- **Delivery mode:** Self-serve product\n- **Buyer persona:** Port agents coordinating vessel calls at mid-size ports.\n- **Primary channel:** Unclear \u2014 no automatable channel identified; relationship-driven industry.\n- **Cluster:** _exception: No cluster fit; maritime is a one-off._\n- **Operator match:** _exception: No bench operator with maritime background._\n\n## Scorecard\n\n| Dimension | Score | Evidence |\n|---|---|---|\n| pain_intensity | 4 | Real coordination pain across agents, terminals, and masters. |\n| buyer_reachability *(gating)* | 2 | Buyers are unreachable via automatable channels \u2014 port agency is relationship-driven; no public roll, no dense community found. |\n| time_to_signal *(gating)* | 2 | Procurement runs through long relationship cycles; no fast paid commitment plausible. |\n| budget_existence | 3 | Budgets exist but sit inside agency fees. |\n| incumbent_exposure | 4 | No dominant horizontal incumbent. |\n| ai_leverage | 3 | Some document automation; core value is coordination. |\n| moat_trajectory | 3 | Port-pair operational data could compound. |\n| founder_market_access | 2 | No bench operator; domain trust is earned over years. |\n| expansion_path | 3 | Customs docs, disbursement accounts. |\n| portfolio_synergy | 2 | Nothing shared with current clusters. |\n\n**Total:** 28 / 50 \u2014 **UNTESTABLE** (gating dimension failed or unscored)\n\n## Case against (required at G0)\n\n_NOT WRITTEN \u2014 approval is blocked until the strongest case against is argued._\n\n**Kill criterion:** _NOT SET \u2014 approval is blocked until a falsifiable kill criterion exists._\n\n## Pre-committed thresholds (locked at G0)\n\n- **G1 reachability:** n/a \u2014 fails gating\n- **G2 engagement:** n/a\n- **G3 retention:** n/a\n- **Caps:** $2,000 / 3 weeks\n\n## Decision\n\n_Pending G0 review._\n",
+   "decision": null,
+   "created_at": "2026-09-01T15:51:21.411434Z"
+  },
+  {
+   "slug": "crewcast",
+   "name": "CrewCast",
+   "one_liner": "AI dispatcher for specialty subcontractors: crew scheduling that re-plans around weather, no-shows, and inspection slips.",
+   "lane": "vertical",
+   "delivery_mode": "self_serve",
+   "persona": "Ops lead at a 10-50 person specialty sub (electrical, roofing, concrete).",
+   "channel": "Construction-smb cluster list (sequential reuse after PermitPilot) + Vox.",
+   "cluster": "construction-smb",
+   "cluster_exception": "",
+   "operator": "jordan-reyes",
+   "operator_exception": "",
+   "case_against": "",
+   "kill_criterion": "",
+   "scorecard": {
+    "dimensions": {}
+   },
+   "thresholds": {
+    "g1_reachability": "",
+    "g2_engagement": "",
+    "g3_retention": "",
+    "budget_cap_usd": 2000,
+    "time_cap_weeks": 3
+   },
+   "memo": "# G0 Memo \u2014 CrewCast\n\n**Thesis:** AI dispatcher for specialty subcontractors: crew scheduling that re-plans around weather, no-shows, and inspection slips.\n\n- **Lane:** Lane two \u2014 vertical, AI as domain expert (FRAMEWORK \u00a72.3)\n- **Delivery mode:** Self-serve product\n- **Buyer persona:** Ops lead at a 10-50 person specialty sub (electrical, roofing, concrete).\n- **Primary channel:** Construction-smb cluster list (sequential reuse after PermitPilot) + Vox.\n- **Cluster:** construction-smb\n- **Operator match:** jordan-reyes\n\n## Scorecard\n\n| Dimension | Score | Evidence |\n|---|---|---|\n| pain_intensity | \u2014 | _unscored_ |\n| buyer_reachability *(gating)* | \u2014 | _unscored_ |\n| time_to_signal *(gating)* | \u2014 | _unscored_ |\n| budget_existence | \u2014 | _unscored_ |\n| incumbent_exposure | \u2014 | _unscored_ |\n| ai_leverage | \u2014 | _unscored_ |\n| moat_trajectory | \u2014 | _unscored_ |\n| founder_market_access | \u2014 | _unscored_ |\n| expansion_path | \u2014 | _unscored_ |\n| portfolio_synergy | \u2014 | _unscored_ |\n\n**Total:** 0 / 50 \u2014 **UNTESTABLE** (gating dimension failed or unscored)\n\n## Case against (required at G0)\n\n_NOT WRITTEN \u2014 approval is blocked until the strongest case against is argued._\n\n**Kill criterion:** _NOT SET \u2014 approval is blocked until a falsifiable kill criterion exists._\n\n## Pre-committed thresholds (locked at G0)\n\n- **G1 reachability:** _not set_\n- **G2 engagement:** _not set_\n- **G3 retention:** _not set_\n- **Caps:** $2,000 / 3 weeks\n\n## Decision\n\n_Pending G0 review._\n",
+   "decision": null,
+   "created_at": "2026-09-01T15:51:21.411442Z"
+  },
+  {
+   "slug": "packproof",
+   "name": "PackProof",
+   "one_liner": "AI label and packaging compliance checker for specialty food brands.",
+   "lane": "vertical",
+   "delivery_mode": "self_serve",
+   "persona": "Founder or brand manager at a specialty food brand shipping retail SKUs.",
+   "channel": "Specialty-food cluster list (sequential reuse after CompliCore).",
+   "cluster": "specialty-food",
+   "cluster_exception": "",
+   "operator": "priya-natarajan",
+   "operator_exception": "",
+   "case_against": "Single-feature product: label checks may be a one-off purchase rather than a workflow, capping LTV below CAC even with cluster list reuse.",
+   "kill_criterion": "Kill if the repeat-check rate is <20% within 60 days of the first paid check.",
+   "scorecard": {
+    "dimensions": {
+     "pain_intensity": {
+      "score": 4,
+      "evidence": "Label errors trigger recalls and retailer rejections."
+     },
+     "buyer_reachability": {
+      "score": 5,
+      "evidence": "Same cluster audience as CompliCore; list reuse is free."
+     },
+     "time_to_signal": {
+      "score": 4,
+      "evidence": "Single-SKU check is an impulse-priced first purchase."
+     },
+     "budget_existence": {
+      "score": 4,
+      "evidence": "Currently paid to labeling consultants per SKU."
+     },
+     "incumbent_exposure": {
+      "score": 4,
+      "evidence": "Enterprise labeling suites ignore small brands."
+     },
+     "ai_leverage": {
+      "score": 5,
+      "evidence": "Regulation-aware review is the whole product."
+     },
+     "moat_trajectory": {
+      "score": 3,
+      "evidence": "Ruling corpus compounds; single-feature risk."
+     },
+     "founder_market_access": {
+      "score": 5,
+      "evidence": "Priya covers the domain."
+     },
+     "expansion_path": {
+      "score": 4,
+      "evidence": "Nutrition panels, claims review, retailer spec packs."
+     },
+     "portfolio_synergy": {
+      "score": 5,
+      "evidence": "Second launch into specialty-food; compounds the cluster."
+     }
+    }
+   },
+   "thresholds": {
+    "g1_reachability": "\u22654% qualified capture on cluster list + 1,000 new contacts",
+    "g2_engagement": "\u226530% of signups run a paid single-SKU check",
+    "g3_retention": "\u22655 paying brands, \u22651 from pure outbound, \u22651 multi-SKU repeat",
+    "budget_cap_usd": 1500,
+    "time_cap_weeks": 3
+   },
+   "memo": "# G0 Memo \u2014 PackProof\n\n**Thesis:** AI label and packaging compliance checker for specialty food brands.\n\n- **Lane:** Lane two \u2014 vertical, AI as domain expert (FRAMEWORK \u00a72.3)\n- **Delivery mode:** Self-serve product\n- **Buyer persona:** Founder or brand manager at a specialty food brand shipping retail SKUs.\n- **Primary channel:** Specialty-food cluster list (sequential reuse after CompliCore).\n- **Cluster:** specialty-food\n- **Operator match:** priya-natarajan\n\n## Scorecard\n\n| Dimension | Score | Evidence |\n|---|---|---|\n| pain_intensity | 4 | Label errors trigger recalls and retailer rejections. |\n| buyer_reachability *(gating)* | 5 | Same cluster audience as CompliCore; list reuse is free. |\n| time_to_signal *(gating)* | 4 | Single-SKU check is an impulse-priced first purchase. |\n| budget_existence | 4 | Currently paid to labeling consultants per SKU. |\n| incumbent_exposure | 4 | Enterprise labeling suites ignore small brands. |\n| ai_leverage | 5 | Regulation-aware review is the whole product. |\n| moat_trajectory | 3 | Ruling corpus compounds; single-feature risk. |\n| founder_market_access | 5 | Priya covers the domain. |\n| expansion_path | 4 | Nutrition panels, claims review, retailer spec packs. |\n| portfolio_synergy | 5 | Second launch into specialty-food; compounds the cluster. |\n\n**Total:** 43 / 50 \u2014 band: **STRONG** (Rare. Launch early in the next tournament.)\n\n## Case against (required at G0)\n\nSingle-feature product: label checks may be a one-off purchase rather than a workflow, capping LTV below CAC even with cluster list reuse.\n\n**Kill criterion:** Kill if the repeat-check rate is <20% within 60 days of the first paid check.\n\n## Pre-committed thresholds (locked at G0)\n\n- **G1 reachability:** \u22654% qualified capture on cluster list + 1,000 new contacts\n- **G2 engagement:** \u226530% of signups run a paid single-SKU check\n- **G3 retention:** \u22655 paying brands, \u22651 from pure outbound, \u22651 multi-SKU repeat\n- **Caps:** $1,500 / 3 weeks\n\n## Decision\n\n**APPROVED** by studio-review \u2014 Approved as the second specialty-food launch; staggered 3 weeks behind CompliCore per cluster rules.\n",
+   "decision": {
+    "approved": true,
+    "decided_by": "studio-review",
+    "notes": "Approved as the second specialty-food launch; staggered 3 weeks behind CompliCore per cluster rules.",
+    "decided_at": "2026-09-01T15:51:21.411874Z"
+   },
+   "created_at": "2026-09-01T15:51:21.411880Z"
+  }
+ ],
+ "clusters": [
+  {
+   "slug": "construction-smb",
+   "name": "SMB Construction & Trades",
+   "description": "Small GCs, specialty subs, and trade contractors: 5-50 seats, run on spreadsheets, phone calls, and one hated legacy vendor.",
+   "watering_holes": [
+    "r/Construction",
+    "AGC chapters",
+    "Procore-adjacent LinkedIn groups"
+   ]
+  },
+  {
+   "slug": "specialty-food",
+   "name": "Specialty Food Manufacturers",
+   "description": "Co-packers and specialty producers, 10-200 employees, drowning in FDA/FSMA compliance paperwork handled by one overloaded QA manager.",
+   "watering_holes": [
+    "IFT communities",
+    "r/FoodManufacturing",
+    "Specialty Food Association"
+   ]
+  }
+ ],
+ "operators": [
+  {
+   "slug": "jordan-reyes",
+   "name": "Jordan Reyes",
+   "domain_profile": "Ex-PM at a construction-tech vendor; 6 years selling into SMB GCs.",
+   "load": 1
+  },
+  {
+   "slug": "priya-natarajan",
+   "name": "Priya Natarajan",
+   "domain_profile": "Former QA director at a co-packer; FSMA/HACCP domain depth.",
+   "load": 1
+  },
+  {
+   "slug": "sam-okafor",
+   "name": "Sam Okafor",
+   "domain_profile": "Two-time SMB SaaS founder; generalist bench for substitution-lane launches.",
+   "load": 0
+  }
+ ],
+ "allowed_emails": [
+  "aviteri@neubloc.com"
+ ]
+}
