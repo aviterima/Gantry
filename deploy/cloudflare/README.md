@@ -9,27 +9,35 @@ source of truth.
 
 Target account: the Cloudflare account of **aviteri@neubloc.com**.
 
-## Deploy (one time setup, then one command)
+## Deploy — recommended path: GitHub Actions (one secret, then automatic)
 
-1. In that Cloudflare account, create an API token
-   (dash.cloudflare.com → My Profile → API Tokens → Create Token) with
-   permissions **Workers Scripts: Edit** and **Workers KV Storage: Edit**.
-2. Make the token available as `CLOUDFLARE_API_TOKEN`. For deploys from a
-   Claude Code remote session, add it as an environment variable in the
-   environment settings, and add these hosts to the environment's network
-   allowlist: `api.cloudflare.com`, `workers.cloudflare.com`,
-   `registry.npmjs.org` (for wrangler).
-3. Run:
+1. In that Cloudflare account, create an API token:
+   dash.cloudflare.com → My Profile → API Tokens → Create Token → use the
+   **Edit Cloudflare Workers** template → Continue → Create Token. Copy it.
+2. Add it to this GitHub repo as an Actions secret named
+   `CLOUDFLARE_API_TOKEN` (repo → Settings → Secrets and variables →
+   Actions → New repository secret). If the token can see more than one
+   Cloudflare account, also add `CLOUDFLARE_ACCOUNT_ID` (shown in the
+   dashboard sidebar).
+3. The `Deploy to Cloudflare` workflow (`.github/workflows/deploy.yml`)
+   deploys automatically on pushes touching `engine/` or
+   `deploy/cloudflare/`, and can be run on demand from the Actions tab
+   (or triggered by Claude via the GitHub API).
 
-   ```bash
-   cd deploy/cloudflare && ./deploy.sh
-   ```
+## Deploy — local alternative (three commands)
 
-The script is idempotent: first run creates the `gantry-kv` namespace (and
-pins its id into `wrangler.toml` — commit that change) and generates the
-session secret; every run regenerates `seed.json` and deploys. The printed
-`*.workers.dev` URL is permanent; a custom domain can be attached from the
-Cloudflare dashboard (Workers → gantry → Settings → Domains & Routes).
+```bash
+git clone -b claude/startup-launch-framework-f3h61a https://github.com/aviterima/Last-Z && cd Last-Z
+pip install -r requirements.txt
+CLOUDFLARE_API_TOKEN=<token> ./deploy/cloudflare/deploy.sh
+```
+
+The script is idempotent either way: it reuses the `gantry-kv` namespace if
+one exists (never duplicating it), sets the session secret only once, and
+regenerates `seed.json` from the Python source of truth on every run. The
+printed `*.workers.dev` URL is permanent; a custom domain can be attached
+from the Cloudflare dashboard (Workers → gantry → Settings → Domains &
+Routes).
 
 Seeding happens on the worker's first request and only once — it never
 overwrites live data. The allowlist starts as `aviteri@neubloc.com`; add
