@@ -39,25 +39,34 @@ products.
 
 ## 2. Market structure: where the openings are
 
-### 2.1 Horizontal systems of record (Salesforce, SAP, Workday...) — avoid head-on
+### 2.1 The one exclusion: attacking established enterprise incumbents head-on
 
-These incumbents have three assets we cannot replicate: deep embedded functionality,
-decades of workflow lock-in, and — most importantly — the proprietary data their customers
-have poured into them. The most likely incumbent move is exactly the one predicted in the
-thesis: push an AI-native interface *on top of* the existing system, leveraging all the
-functionality and data underneath. When that happens, "AI wrapper around what Salesforce
-already stores" is a dead category. **We do not attack the installed base.**
+Incumbents like Salesforce, SAP, and Workday have three assets we cannot replicate: deep
+embedded functionality, decades of workflow lock-in, and — most importantly — the
+proprietary data their customers have poured into them. The most likely incumbent move is
+exactly the one predicted in the thesis: push an AI-native interface *on top of* the
+existing system, leveraging all the functionality and data underneath. When that happens,
+"AI wrapper around what Salesforce already stores" is a dead category. **We do not attack
+the installed base.** That is the only structural exclusion — both lanes below are fully
+in play.
 
-### 2.2 The exception: AI-native simplified re-implementations for young companies
+### 2.2 Lane one: product substitution — de-configured systems of record for younger and smaller companies
 
-The incumbent's data-gravity moat only applies to companies that *already have data in the
-incumbent*. A two-year-old startup has nothing to migrate; for them the incumbent's depth
-is a liability (complexity, cost, admin overhead), not a moat. This is the Attio play in
-CRM: an AI-native, radically simpler system of record aimed at companies too young to be
-locked in.
+Established horizontal categories remain attractive when the play is **substitution, not
+displacement**: a de-configured, inexpensive, AI-native version of a proven system,
+targeted at companies the incumbent does not really serve — startups, young companies,
+and smaller businesses for whom the incumbent's depth is a liability (complexity, cost,
+admin overhead), not a moat. The incumbent's data-gravity only holds companies that
+*already have data inside*; a two-year-old startup has nothing to migrate. This is the
+Attio play in CRM: an AI-native, radically simpler system of record aimed at companies
+too young to be locked in.
 
-This lane is **viable but crowded** — it is the most obvious play, so every well-funded
-studio is running it. Our filter for entering it:
+This lane has real structural advantages for the parallel-launch model: the category is
+already validated (no need to prove the problem exists), the buyer already understands
+what the product is, budget substitution beats budget creation (scorecard dimension 4),
+and demand signals come through clean, fast, self-serve channels. Its main hazard is
+crowding — it is the obvious play, so every well-funded studio is running it. Our filter
+for entering it:
 
 - Pick systems of record where **no credible AI-native challenger has yet emerged**
   (CRM has Attio; but consider e.g. PLM, quality management, clinical trial management,
@@ -66,7 +75,7 @@ studio is running it. Our filter for entering it:
 - The wedge must generate its own data moat fast — the product should get better with
   each customer's usage in a way a later entrant can't shortcut.
 
-### 2.3 The main lane: vertical solutions where AI is the domain expert
+### 2.3 Lane two: vertical solutions where AI is the domain expert
 
 Historically, vertical SaaS required a founder with deep domain expertise, and many
 verticals were too small to justify venture-scale engineering investment. Both constraints
@@ -151,10 +160,12 @@ dimensions and shouldn't be in this portfolio).
 - **Batch size and cadence:** launch in cohorts (e.g. 5 at a time, every 6–8 weeks) rather
   than 20 at once — the launch stack improves with each cohort, and later launches inherit
   it.
-- **Diversify across the two lanes:** roughly 2/3 vertical greenfield (§2.3), 1/3
-  simplified-system-of-record (§2.2). The vertical lane has better moats; the horizontal
-  lane has faster, cleaner demand signals. Don't let the dashboard's legibility bias the
-  whole portfolio into lane 2.
+- **Diversify across the two lanes:** both are legitimate; only head-on attacks on
+  incumbent installed bases (§2.1) are excluded. As a starting mix, roughly 2/3 vertical
+  greenfield (§2.3) and 1/3 product-substitution (§2.2), then let gate outcomes per cohort
+  adjust the ratio. The vertical lane tends toward better moats; the substitution lane
+  toward faster, cleaner demand signals — don't let the dashboard's legibility alone bias
+  the whole portfolio into the substitution lane.
 - **Correlated bets are fine, correlated channels are not.** Two launches selling to the
   same buyer persona through the same channel compete with each other for the same
   attention; stagger them.
