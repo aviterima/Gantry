@@ -1,0 +1,58 @@
+slug: permit-pilot
+name: PermitPilot
+one_liner: 'AI permit-expediting service for small general contractors: we prepare,
+  file, and chase municipal permits so the GC never sits in a queue.'
+lane: vertical
+delivery_mode: service_first
+persona: Owner/office manager at a 5-30 person GC doing residential and light commercial
+  work.
+channel: Outbound email to licensed GCs (public license rolls) + construction-smb
+  cluster list.
+cluster: construction-smb
+cluster_exception: ''
+operator: jordan-reyes
+operator_exception: ''
+scorecard:
+  dimensions:
+    pain_intensity:
+      score: 5
+      evidence: Permit delays stall jobs and crews; GCs quote 2-6 week losses per
+        project.
+    buyer_reachability:
+      score: 5
+      evidence: Public contractor license registries; 40k+ emails harvestable; cluster
+        list exists.
+    time_to_signal:
+      score: 4
+      evidence: 'Service-first: paid expediting engagements can close in 2-3 weeks.'
+    budget_existence:
+      score: 5
+      evidence: GCs already pay human expediters $500-2k per permit.
+    incumbent_exposure:
+      score: 4
+      evidence: No horizontal incumbent owns municipal permitting workflows.
+    ai_leverage:
+      score: 4
+      evidence: AI drafts applications, tracks jurisdiction rules, chases status —
+        the expert work.
+    moat_trajectory:
+      score: 4
+      evidence: Jurisdiction rulebook + outcome data compounds per filing.
+    founder_market_access:
+      score: 4
+      evidence: Jordan (bench) sold into SMB GCs for 6 years.
+    expansion_path:
+      score: 4
+      evidence: Inspections scheduling, lien waivers, licensing renewals to the same
+        buyer.
+    portfolio_synergy:
+      score: 5
+      evidence: Anchor launch for the construction-smb cluster.
+thresholds:
+  g1_reachability: ≥3% qualified reply/booking rate on 1,500 outbound contacts
+  g2_engagement: ≥3 paid expediting engagements delivered and accepted
+  g3_retention: ≥4 paying GCs, ≥1 from pure outbound, ≥1 repeat filing
+  budget_cap_usd: 2000
+  time_cap_weeks: 3
+decision: null
+created_at: '2026-09-01T15:28:14.762748Z'

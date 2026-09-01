@@ -1,0 +1,54 @@
+slug: complicore
+name: CompliCore
+one_liner: 'AI QA/compliance expert for specialty food manufacturers: FSMA plans,
+  audit prep, and supplier docs delivered as a service, then productized.'
+lane: vertical
+delivery_mode: service_first
+persona: QA manager or owner at a 10-200 person specialty food producer / co-packer.
+channel: Vox social in food-manufacturing communities + outbound to FDA registration
+  lists.
+cluster: specialty-food
+cluster_exception: ''
+operator: priya-natarajan
+operator_exception: ''
+scorecard:
+  dimensions:
+    pain_intensity:
+      score: 5
+      evidence: Failed audits stop shipments; SQF/FSMA deadlines are forcing events.
+    buyer_reachability:
+      score: 4
+      evidence: FDA facility registrations are public; active communities identified.
+    time_to_signal:
+      score: 4
+      evidence: Audit-prep engagements are bought under deadline pressure.
+    budget_existence:
+      score: 5
+      evidence: They already pay consultants $10-30k per audit cycle.
+    incumbent_exposure:
+      score: 5
+      evidence: Incumbent QMS vendors target enterprise; SMB tier is greenfield.
+    ai_leverage:
+      score: 5
+      evidence: 'The product *is* the domain expert: plan drafting, gap analysis,
+        doc chasing.'
+    moat_trajectory:
+      score: 4
+      evidence: Corpus of audit findings and supplier docs compounds.
+    founder_market_access:
+      score: 5
+      evidence: Priya (bench) ran QA at a co-packer.
+    expansion_path:
+      score: 4
+      evidence: Supplier verification, label compliance, recall drills.
+    portfolio_synergy:
+      score: 4
+      evidence: Anchor launch for the specialty-food cluster.
+thresholds:
+  g1_reachability: ≥2.5% qualified inquiry rate across outbound + community posts
+  g2_engagement: ≥2 paid audit-prep engagements delivered
+  g3_retention: ≥3 paying customers, ≥1 on a monthly compliance retainer
+  budget_cap_usd: 2000
+  time_cap_weeks: 3
+decision: null
+created_at: '2026-09-01T15:28:14.762783Z'

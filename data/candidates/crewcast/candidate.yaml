@@ -1,0 +1,22 @@
+slug: crewcast
+name: CrewCast
+one_liner: 'AI dispatcher for specialty subcontractors: crew scheduling that re-plans
+  around weather, no-shows, and inspection slips.'
+lane: vertical
+delivery_mode: self_serve
+persona: Ops lead at a 10-50 person specialty sub (electrical, roofing, concrete).
+channel: Construction-smb cluster list (sequential reuse after PermitPilot) + Vox.
+cluster: construction-smb
+cluster_exception: ''
+operator: jordan-reyes
+operator_exception: ''
+scorecard:
+  dimensions: {}
+thresholds:
+  g1_reachability: ''
+  g2_engagement: ''
+  g3_retention: ''
+  budget_cap_usd: 2000
+  time_cap_weeks: 3
+decision: null
+created_at: '2026-09-01T15:28:14.762854Z'
