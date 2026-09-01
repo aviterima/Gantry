@@ -24,7 +24,13 @@
 | expansion_path | 4 | Inspections scheduling, lien waivers, licensing renewals to the same buyer. |
 | portfolio_synergy | 5 | Anchor launch for the construction-smb cluster. |
 
-**Total:** 44 / 50
+**Total:** 44 / 50 — band: **STRONG** (Rare. Launch early in the next tournament.)
+
+## Case against (required at G0)
+
+Municipal heterogeneity may resist automation: every jurisdiction is a special case, and margins could collapse into manual labor that never productizes. Expediting relationships with clerks may matter more than filing quality.
+
+**Kill criterion:** Kill if >50% of engagement hours are still manual after 10 filings across 3 jurisdictions, or turnaround beats the GC's own baseline by <20%.
 
 ## Pre-committed thresholds (locked at G0)
 

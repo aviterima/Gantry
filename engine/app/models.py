@@ -16,6 +16,17 @@ from pydantic import BaseModel, Field
 GATING_DIMENSIONS = ("buyer_reachability", "time_to_signal")
 GATING_MIN_SCORE = 3
 
+# Deliberately harsh bands (lesson from Polis: "a product that calls 75
+# 'excellent' is not helping anyone decide"). Computed here, never by a model,
+# and always rendered wherever a total is rendered.
+BANDS: tuple[tuple[int, str, str], ...] = (
+    (43, "strong", "Rare. Launch early in the next tournament."),
+    (35, "credible", "Launchable — queue it."),
+    (28, "conditional", "Fix the named weakness first."),
+    (20, "weak", "Park it; revisit only with new evidence."),
+    (0, "not_this_one", "No."),
+)
+
 DIMENSIONS: dict[str, str] = {
     "pain_intensity": "Hair-on-fire pain vs. a vitamin?",
     "buyer_reachability": "1,000+ qualified buyers reachable via automatable channels for < $2k?",
@@ -74,6 +85,20 @@ class Scorecard(BaseModel):
     def is_testable(self) -> bool:
         return not self.missing_dimensions() and not self.failed_gates()
 
+    def band(self) -> Optional[dict]:
+        """Deterministic band for a COMPLETE scorecard; None otherwise.
+
+        Never bands a partial scorecard — a partial total silently
+        renormalizes toward whatever was scored (the Polis overall() bug).
+        """
+        if self.missing_dimensions():
+            return None
+        total = self.total()
+        for floor, name, note in BANDS:
+            if total >= floor:
+                return {"name": name, "note": note}
+        return None
+
 
 class GateThresholds(BaseModel):
     """Pre-committed G1-G3 thresholds, written at G0, never after seeing data."""
@@ -110,6 +135,10 @@ class Candidate(BaseModel):
     cluster_exception: str = ""
     operator: Optional[str] = None
     operator_exception: str = ""
+    # The anti-recommendation (lesson from Polis): the strongest case against,
+    # argued properly, and a falsifiable kill criterion. Both required at G0.
+    case_against: str = ""
+    kill_criterion: str = ""
     scorecard: Scorecard = Field(default_factory=Scorecard)
     thresholds: GateThresholds = Field(default_factory=GateThresholds)
     memo: str = ""
@@ -139,6 +168,10 @@ class Candidate(BaseModel):
             gaps.append("operator")
         if not self.thresholds.is_complete():
             gaps.append("thresholds")
+        if not self.case_against.strip():
+            gaps.append("case-against")
+        if not self.kill_criterion.strip():
+            gaps.append("kill-criterion")
         return gaps
 
     def is_decidable(self) -> tuple[bool, list[str]]:

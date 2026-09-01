@@ -11,6 +11,11 @@ cluster_exception: Substitution-lane launch; buyer pool (emerging managers) does
   map to a current cluster. Revisit if a fintech cluster forms.
 operator: sam-okafor
 operator_exception: ''
+case_against: 'Fund admin is a trust purchase: emerging managers may pay legacy premiums
+  precisely because LPs recognize the name, and ''cheap + AI'' could read as audit
+  risk rather than efficiency.'
+kill_criterion: Kill if >=3 qualified GPs cite LP acceptance as the blocker and none
+  converts after we provide an LP-facing assurance letter.
 scorecard:
   dimensions:
     pain_intensity:
@@ -51,4 +56,4 @@ thresholds:
   budget_cap_usd: 2000
   time_cap_weeks: 3
 decision: null
-created_at: '2026-09-01T15:28:14.762816Z'
+created_at: '2026-09-01T15:39:27.415671Z'

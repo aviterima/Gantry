@@ -80,6 +80,11 @@ def build_candidates() -> list[Candidate]:
         channel="Outbound email to licensed GCs (public license rolls) + construction-smb cluster list.",
         cluster="construction-smb",
         operator="jordan-reyes",
+        case_against="Municipal heterogeneity may resist automation: every jurisdiction is a "
+        "special case, and margins could collapse into manual labor that never productizes. "
+        "Expediting relationships with clerks may matter more than filing quality.",
+        kill_criterion="Kill if >50% of engagement hours are still manual after 10 filings "
+        "across 3 jurisdictions, or turnaround beats the GC's own baseline by <20%.",
         scorecard=_sc(
             pain_intensity=(5, "Permit delays stall jobs and crews; GCs quote 2-6 week losses per project."),
             buyer_reachability=(5, "Public contractor license registries; 40k+ emails harvestable; cluster list exists."),
@@ -112,6 +117,11 @@ def build_candidates() -> list[Candidate]:
         channel="Vox social in food-manufacturing communities + outbound to FDA registration lists.",
         cluster="specialty-food",
         operator="priya-natarajan",
+        case_against="Audit-prep buying is episodic; retainers may not stick between audit "
+        "cycles, leaving a services business whose software margins never materialize. "
+        "Liability exposure if a plan we drafted fails an audit.",
+        kill_criterion="Kill if fewer than 1 of the first 5 customers converts to a monthly "
+        "compliance retainer within 60 days of audit completion.",
         scorecard=_sc(
             pain_intensity=(5, "Failed audits stop shipments; SQF/FSMA deadlines are forcing events."),
             buyer_reachability=(4, "FDA facility registrations are public; active communities identified."),
@@ -146,6 +156,11 @@ def build_candidates() -> list[Candidate]:
         cluster_exception="Substitution-lane launch; buyer pool (emerging managers) doesn't map "
         "to a current cluster. Revisit if a fintech cluster forms.",
         operator="sam-okafor",
+        case_against="Fund admin is a trust purchase: emerging managers may pay legacy "
+        "premiums precisely because LPs recognize the name, and 'cheap + AI' could read "
+        "as audit risk rather than efficiency.",
+        kill_criterion="Kill if >=3 qualified GPs cite LP acceptance as the blocker and "
+        "none converts after we provide an LP-facing assurance letter.",
         scorecard=_sc(
             pain_intensity=(4, "Emerging managers defer admin until an LP or audit forces it."),
             buyer_reachability=(4, "Form D filings are public; emerging-manager communities are dense."),
@@ -224,6 +239,10 @@ def build_candidates() -> list[Candidate]:
         channel="Specialty-food cluster list (sequential reuse after CompliCore).",
         cluster="specialty-food",
         operator="priya-natarajan",
+        case_against="Single-feature product: label checks may be a one-off purchase rather "
+        "than a workflow, capping LTV below CAC even with cluster list reuse.",
+        kill_criterion="Kill if the repeat-check rate is <20% within 60 days of the first "
+        "paid check.",
         scorecard=_sc(
             pain_intensity=(4, "Label errors trigger recalls and retailer rejections."),
             buyer_reachability=(5, "Same cluster audience as CompliCore; list reuse is free."),

@@ -9,6 +9,10 @@ cluster: specialty-food
 cluster_exception: ''
 operator: priya-natarajan
 operator_exception: ''
+case_against: 'Single-feature product: label checks may be a one-off purchase rather
+  than a workflow, capping LTV below CAC even with cluster list reuse.'
+kill_criterion: Kill if the repeat-check rate is <20% within 60 days of the first
+  paid check.
 scorecard:
   dimensions:
     pain_intensity:
@@ -52,5 +56,5 @@ decision:
   decided_by: studio-review
   notes: Approved as the second specialty-food launch; staggered 3 weeks behind CompliCore
     per cluster rules.
-  decided_at: '2026-09-01T15:28:14.762878Z'
-created_at: '2026-09-01T15:28:14.762887Z'
+  decided_at: '2026-09-01T15:39:27.415861Z'
+created_at: '2026-09-01T15:39:27.415868Z'

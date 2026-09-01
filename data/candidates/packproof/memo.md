@@ -24,7 +24,13 @@
 | expansion_path | 4 | Nutrition panels, claims review, retailer spec packs. |
 | portfolio_synergy | 5 | Second launch into specialty-food; compounds the cluster. |
 
-**Total:** 43 / 50
+**Total:** 43 / 50 — band: **STRONG** (Rare. Launch early in the next tournament.)
+
+## Case against (required at G0)
+
+Single-feature product: label checks may be a one-off purchase rather than a workflow, capping LTV below CAC even with cluster list reuse.
+
+**Kill criterion:** Kill if the repeat-check rate is <20% within 60 days of the first paid check.
 
 ## Pre-committed thresholds (locked at G0)
 

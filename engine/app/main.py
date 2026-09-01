@@ -41,6 +41,7 @@ def candidate_view(c: Candidate) -> dict:
     view = c.model_dump(mode="json")
     view["status"] = c.status.value
     view["total_score"] = c.scorecard.total()
+    view["band"] = c.scorecard.band()
     view["failed_gates"] = c.scorecard.failed_gates()
     view["decidable"] = decidable
     view["blockers"] = blockers
@@ -94,6 +95,8 @@ class CandidateIn(BaseModel):
     cluster_exception: str = ""
     operator: Optional[str] = None
     operator_exception: str = ""
+    case_against: str = ""
+    kill_criterion: str = ""
 
 
 @app.post("/api/candidates", status_code=201)
@@ -142,6 +145,23 @@ def set_thresholds(slug: str, body: GateThresholds):
         # Mission Control enforces the no-moved-goalposts rule (ENGINE-SPEC).
         raise HTTPException(409, "thresholds are locked at G0; use the extension-memo flow")
     c.thresholds = body
+    c.memo = draft_memo(c)
+    registry.save_candidate(c)
+    return candidate_view(c)
+
+
+class CaseIn(BaseModel):
+    case_against: str
+    kill_criterion: str
+
+
+@app.post("/api/candidates/{slug}/case")
+def set_case(slug: str, body: CaseIn):
+    c = _get_or_404(slug)
+    if c.decision is not None:
+        raise HTTPException(409, "candidate already has a G0 decision; the case against is locked")
+    c.case_against = body.case_against
+    c.kill_criterion = body.kill_criterion
     c.memo = draft_memo(c)
     registry.save_candidate(c)
     return candidate_view(c)

@@ -48,10 +48,22 @@ def draft_memo(candidate: Candidate) -> str:
             lines.append(f"| {name}{gate} | — | _unscored_ |")
         else:
             lines.append(f"| {name}{gate} | {ds.score} | {ds.evidence or '—'} |")
+    band = sc.band()
+    band_note = ""
+    if not sc.is_testable():
+        band_note = " — **UNTESTABLE** (gating dimension failed or unscored)"
+    elif band:
+        band_note = f" — band: **{band['name'].upper().replace('_', ' ')}** ({band['note']})"
     lines += [
         "",
-        f"**Total:** {sc.total()} / 50"
-        + ("" if sc.is_testable() else " — **UNTESTABLE** (gating dimension failed or unscored)"),
+        f"**Total:** {sc.total()} / 50{band_note}",
+        "",
+        "## Case against (required at G0)",
+        "",
+        candidate.case_against
+        or "_NOT WRITTEN — approval is blocked until the strongest case against is argued._",
+        "",
+        f"**Kill criterion:** {candidate.kill_criterion or '_NOT SET — approval is blocked until a falsifiable kill criterion exists._'}",
         "",
         "## Pre-committed thresholds (locked at G0)",
         "",

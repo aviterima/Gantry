@@ -24,7 +24,13 @@
 | expansion_path | 4 | Supplier verification, label compliance, recall drills. |
 | portfolio_synergy | 4 | Anchor launch for the specialty-food cluster. |
 
-**Total:** 45 / 50
+**Total:** 45 / 50 — band: **STRONG** (Rare. Launch early in the next tournament.)
+
+## Case against (required at G0)
+
+Audit-prep buying is episodic; retainers may not stick between audit cycles, leaving a services business whose software margins never materialize. Liability exposure if a plan we drafted fails an audit.
+
+**Kill criterion:** Kill if fewer than 1 of the first 5 customers converts to a monthly compliance retainer within 60 days of audit completion.
 
 ## Pre-committed thresholds (locked at G0)
 

@@ -26,6 +26,12 @@
 
 **Total:** 0 / 50 — **UNTESTABLE** (gating dimension failed or unscored)
 
+## Case against (required at G0)
+
+_NOT WRITTEN — approval is blocked until the strongest case against is argued._
+
+**Kill criterion:** _NOT SET — approval is blocked until a falsifiable kill criterion exists._
+
 ## Pre-committed thresholds (locked at G0)
 
 - **G1 reachability:** _not set_

@@ -37,6 +37,12 @@
   .st.untestable{background:#4a2320;color:var(--bad)}
   .st.g0_approved{background:#173d2e;color:var(--good)}
   .st.g0_rejected{background:#3c3220;color:var(--warn)}
+  .band{font-size:10.5px;font-weight:700;letter-spacing:.5px;border-radius:5px;padding:3px 8px;white-space:nowrap}
+  .band.strong{background:#173d2e;color:var(--good)}
+  .band.credible{background:#153a5e;color:var(--accent)}
+  .band.conditional{background:#3c3220;color:var(--warn)}
+  .band.weak{background:#33261d;color:#d99a6c}
+  .band.not_this_one{background:#4a2320;color:var(--bad)}
   button.act{background:var(--accent);color:#08131f;border:none;border-radius:7px;
     padding:7px 14px;font:inherit;font-weight:650;cursor:pointer}
   button.act.sec{background:var(--panel2);color:var(--text);border:1px solid var(--line)}
@@ -107,6 +113,8 @@ function toast(msg, isErr){
 
 const STATUS_LABEL = {draft:'Draft', scored:'Scored — in queue', untestable:'Untestable',
   g0_approved:'G0 Approved', g0_rejected:'G0 Rejected'};
+const bandChip = c => (!c.band || c.status==='untestable') ? '' :
+  `<span class="band ${c.band.name}" title="${esc(c.band.note)}">${c.band.name.replace(/_/g,' ').toUpperCase()} ${c.total_score}/50</span>`;
 const LANE = {substitution:'Lane 1 · Substitution', vertical:'Lane 2 · Vertical'};
 const MODE = {service_first:'Service-first', self_serve:'Self-serve'};
 
@@ -135,11 +143,10 @@ async function renderQueue(){
     <div class="card">
       <div class="row" style="justify-content:space-between">
         <div>
-          <h3>${esc(c.name)} <span class="st ${c.status}">${STATUS_LABEL[c.status]}</span></h3>
+          <h3>${esc(c.name)} <span class="st ${c.status}">${STATUS_LABEL[c.status]}</span> ${bandChip(c)}</h3>
           <div class="muted">${esc(c.one_liner)}</div>
           <div class="row" style="margin-top:8px">
             <span class="chip b">${LANE[c.lane]}</span><span class="chip b">${MODE[c.delivery_mode]}</span>
-            <span class="chip">score ${c.total_score}/50</span>
             <span class="chip">cluster: ${esc(c.cluster || 'exception')}</span>
             <span class="chip">operator: ${esc(c.operator || 'exception')}</span>
           </div>
@@ -173,7 +180,7 @@ async function renderRegistry(){
         <td><b>${esc(c.name)}</b><br><span class="muted">${esc(c.one_liner)}</span></td>
         <td>${LANE[c.lane]}<br><span class="muted">${MODE[c.delivery_mode]}</span></td>
         <td>${esc(c.cluster || '—')}</td><td>${esc(c.operator || '—')}</td>
-        <td>${c.total_score}/50</td>
+        <td>${c.total_score}/50<br>${bandChip(c)}</td>
         <td><span class="st ${c.status}">${STATUS_LABEL[c.status]}</span></td></tr>`).join('')}
     </table></div>`;
 }
@@ -194,7 +201,7 @@ async function renderDetail(slug){
   $('#pane').innerHTML = `
     <button class="act sec" onclick="detailSlug=null;renderRegistry()">← All candidates</button>
     <div class="card" style="margin-top:12px">
-      <h3>${esc(c.name)} <span class="st ${c.status}">${STATUS_LABEL[c.status]}</span></h3>
+      <h3>${esc(c.name)} <span class="st ${c.status}">${STATUS_LABEL[c.status]}</span> ${bandChip(c)}</h3>
       <div class="muted">${esc(c.one_liner)}</div>
       <div class="row" style="margin-top:8px">
         <span class="chip b">${LANE[c.lane]}</span><span class="chip b">${MODE[c.delivery_mode]}</span>
@@ -214,6 +221,14 @@ async function renderDetail(slug){
         </tr>`).join('')}
       </table></div>
       ${locked?'':`<div style="margin-top:12px"><button class="act" onclick="saveScores('${c.slug}')">Save scorecard</button></div>`}
+    </div>
+    <div class="card">
+      <h3>Case against &amp; kill criterion ${locked?'<span class="muted">(locked)</span>':'<span class="muted">(required for approval)</span>'}</h3>
+      <label>Strongest case against — argued properly, not strawmanned</label>
+      <textarea id="ca" style="min-height:64px" ${locked?'disabled':''}>${esc(c.case_against||'')}</textarea>
+      <label>Kill criterion — falsifiable, checkable, dated</label>
+      <textarea id="kc" ${locked?'disabled':''}>${esc(c.kill_criterion||'')}</textarea>
+      ${locked?'':`<div style="margin-top:12px"><button class="act" onclick="saveCase('${c.slug}')">Save case against</button></div>`}
     </div>
     <div class="card">
       <h3>Pre-committed thresholds ${locked?'<span class="muted">(locked at G0 — extension-memo flow only)</span>':''}</h3>
@@ -243,6 +258,13 @@ async function saveScores(slug){
   });
   try { await api(`/candidates/${slug}/score`, {body:{dimensions:dims}});
     toast('Scorecard saved — status recomputed'); refresh(); renderDetail(slug);
+  } catch(e){ toast(e.message, true); }
+}
+
+async function saveCase(slug){
+  try { await api(`/candidates/${slug}/case`, {body:{
+      case_against: $('#ca').value, kill_criterion: $('#kc').value }});
+    toast('Case against saved'); refresh(); renderDetail(slug);
   } catch(e){ toast(e.message, true); }
 }
 

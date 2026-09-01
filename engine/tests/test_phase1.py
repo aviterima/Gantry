@@ -35,6 +35,8 @@ def make_candidate(**overrides) -> Candidate:
         delivery_mode="service_first",
         cluster="construction-smb",
         operator="jordan-reyes",
+        case_against="It might fail because of X, argued honestly.",
+        kill_criterion="Kill if Y does not happen by week 4.",
         scorecard=full_scorecard(),
         thresholds=GateThresholds(
             g1_reachability="x", g2_engagement="y", g3_retention="z"
@@ -98,6 +100,37 @@ def test_incomplete_thresholds_block_decision():
     c = make_candidate(thresholds=GateThresholds())
     ok, blockers = c.is_decidable()
     assert not ok and any("thresholds" in b for b in blockers)
+
+
+def test_missing_case_against_or_kill_criterion_blocks_decision():
+    c = make_candidate(case_against="  ", kill_criterion="")
+    ok, blockers = c.is_decidable()
+    assert not ok
+    joined = " ".join(blockers)
+    assert "case-against" in joined and "kill-criterion" in joined
+
+
+# -- bands (deterministic, code-only — lesson from Polis) ------------------
+
+
+def test_band_is_deterministic_and_harsh():
+    strong = Scorecard(
+        dimensions={n: DimensionScore(score=5, evidence="e") for n in DIMENSIONS}
+    )
+    assert strong.band()["name"] == "strong"
+    mediocre = Scorecard(
+        dimensions={n: DimensionScore(score=3, evidence="e") for n in DIMENSIONS}
+    )
+    assert mediocre.band()["name"] == "conditional"  # 30/50 is not "excellent"
+
+
+def test_incomplete_scorecard_never_bands():
+    # Guards the Polis overall() renormalization bug: a partial scorecard
+    # must never produce a valid-looking band.
+    sc = Scorecard(
+        dimensions={"pain_intensity": DimensionScore(score=5, evidence="e")}
+    )
+    assert sc.band() is None
 
 
 # -- memo ------------------------------------------------------------------
@@ -180,6 +213,14 @@ def test_api_full_g0_flow(client):
     assert client.post("/api/candidates/api-co/thresholds", json={
         "g1_reachability": "a", "g2_engagement": "b", "g3_retention": "c",
         "budget_cap_usd": 1000, "time_cap_weeks": 3}).status_code == 200
+
+    # still blocked: the case against is a required declaration
+    r = client.post("/api/candidates/api-co/decision",
+                    json={"approved": True, "decided_by": "t"})
+    assert r.status_code == 422 and "case-against" in r.json()["detail"]
+    assert client.post("/api/candidates/api-co/case", json={
+        "case_against": "Strongest case against, argued honestly.",
+        "kill_criterion": "Kill if no paid commitment by week 4."}).status_code == 200
 
     r = client.post("/api/candidates/api-co/decision",
                     json={"approved": True, "decided_by": "t", "notes": "ok"})

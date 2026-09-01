@@ -9,6 +9,8 @@ cluster: null
 cluster_exception: No cluster fit; maritime is a one-off.
 operator: null
 operator_exception: No bench operator with maritime background.
+case_against: ''
+kill_criterion: ''
 scorecard:
   dimensions:
     pain_intensity:
@@ -50,4 +52,4 @@ thresholds:
   budget_cap_usd: 2000
   time_cap_weeks: 3
 decision: null
-created_at: '2026-09-01T15:28:14.762838Z'
+created_at: '2026-09-01T15:39:27.415766Z'

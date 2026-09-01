@@ -24,7 +24,13 @@
 | expansion_path | 4 | Tax docs, LP portal, compliance calendar. |
 | portfolio_synergy | 3 | Reuses launch stack; no cluster sharing. |
 
-**Total:** 36 / 50
+**Total:** 36 / 50 — band: **CREDIBLE** (Launchable — queue it.)
+
+## Case against (required at G0)
+
+Fund admin is a trust purchase: emerging managers may pay legacy premiums precisely because LPs recognize the name, and 'cheap + AI' could read as audit risk rather than efficiency.
+
+**Kill criterion:** Kill if >=3 qualified GPs cite LP acceptance as the blocker and none converts after we provide an LP-facing assurance letter.
 
 ## Pre-committed thresholds (locked at G0)
 

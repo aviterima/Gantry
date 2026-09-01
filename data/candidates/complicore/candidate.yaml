@@ -11,6 +11,11 @@ cluster: specialty-food
 cluster_exception: ''
 operator: priya-natarajan
 operator_exception: ''
+case_against: Audit-prep buying is episodic; retainers may not stick between audit
+  cycles, leaving a services business whose software margins never materialize. Liability
+  exposure if a plan we drafted fails an audit.
+kill_criterion: Kill if fewer than 1 of the first 5 customers converts to a monthly
+  compliance retainer within 60 days of audit completion.
 scorecard:
   dimensions:
     pain_intensity:
@@ -51,4 +56,4 @@ thresholds:
   budget_cap_usd: 2000
   time_cap_weeks: 3
 decision: null
-created_at: '2026-09-01T15:28:14.762783Z'
+created_at: '2026-09-01T15:39:27.415650Z'
