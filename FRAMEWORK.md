@@ -227,7 +227,12 @@ portfolio.
 ## 6. What the system automates (build order, once we commit)
 
 The full build specification lives in `ENGINE-SPEC.md` (which names the operating
-stack: Neubloc for email, Vox for social, Forum for CRM). In summary:
+stack: Neubloc for email, Vox for social, Forum for CRM). The entry point is
+**Mission Control** — a single control, configuration, and data-summary dashboard
+through which the whole system is operated — and every launch's software is built
+spec-first on a professional engineering template so that, once a launch passes the
+viability gates, its specs, code, and operating history hand off cleanly to a
+dedicated team. In summary:
 
 1. **Intake & scoring** — candidate registry, the §3 scorecard, G0 memos with delivery
    mode, cluster assignment, and operator match.
@@ -241,6 +246,10 @@ stack: Neubloc for email, Vox for social, Forum for CRM). In summary:
    generation itself approaches zero cost.
 5. **Operator bench registry** — the bench, their domain profiles, current load, and
    candidate matching at G0.
+6. **Engineering handoff** — per-launch PRD/architecture/ADR spec sets, a golden repo
+   template with CI and tests from the first commit, a known-debt register, and an
+   automatically assembled handoff package at the G2 concentration trigger and at G4
+   spinout.
 
 The system should make killing easy and launching cheap. If it ever makes launches feel
 precious, it has failed.

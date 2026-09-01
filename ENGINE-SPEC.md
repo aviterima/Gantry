@@ -55,6 +55,65 @@ import/export step rather than blocking the phase.
 
 ---
 
+## Mission Control — the entry point
+
+One web application is the system's single front door; nothing is operated by poking
+adapters or editing files directly once the equivalent Mission Control surface exists.
+Three panes:
+
+1. **Control** — the lifecycle actions: the G0 approval queue, the launch checklist
+   runner, the kill/extend/promote queue, concentration-trigger confirmations, and the
+   human-in-the-loop approvals (memo sign-off, first sends of new sequences). Every
+   action is audited: who, when, against which gate record.
+2. **Configuration** — adapter connections and health (Neubloc, Vox, Forum, web
+   analytics), cluster definitions and their shared assets, the operator bench, gate
+   threshold templates, budget caps, suppression lists, and the brand/domain inventory.
+   Configuration is versioned; thresholds locked at G0 render read-only in the UI and
+   can only change through the extension-memo flow — the interface itself enforces the
+   no-moved-goalposts rule.
+3. **Data summary** — drill-down from portfolio → tournament → launch: every gate
+   metric against its pre-committed threshold, days-to-cap, spend vs. cap, cluster
+   asset health, channel performance, reallocation speed. Every displayed number is
+   traceable to Signal events — no hand-entered metrics.
+
+Mission Control is built incrementally: Phase 1 ships the shell with registry,
+scorecard, and G0 approvals; Phase 2 adds launch control and configuration; Phase 3
+adds the gate dashboard and decision queue; Phase 4 adds the portfolio and cluster
+views. Each phase's acceptance criteria are met *through* Mission Control, not around
+it.
+
+---
+
+## Engineering discipline and the handoff package
+
+Every launch's software is written to be handed to a professional team the moment it
+passes the viability gates — hand-off-ready from day one, because retrofitting quality
+after a gate pass costs exactly the time the concentration rule says we don't have.
+
+- **Spec-first development.** No launch code is generated without its spec set: a short
+  PRD derived from the G0 memo, an architecture document, and ADRs for any
+  non-obvious decision (including every CSV-bridge or adapter compromise). AI drafts
+  all of it; the specs live in the launch's repo, not in chat history.
+- **Golden repo template.** Each launch gets its own repository instantiated from a
+  studio template: enforced lint/format/typecheck, a test suite that runs in CI from
+  the first commit, infrastructure-as-code for its deployment, secrets kept in a
+  managed store (never in the repo), a seeded README and operational runbook.
+  AI writes the code; the template and CI enforce the standard; a human reviews at
+  gate transitions, not every commit.
+- **Known-debt register.** Deliberate shortcuts (a manual step behind a service-first
+  offering, a batch CSV bridge, an unscaled query) are logged in the repo as debt
+  entries with their trigger condition for repayment — a team inheriting the code
+  learns its compromises from the register, not from incidents.
+- **The handoff package.** Assembled automatically, first at the G2 concentration
+  trigger (for the operator going hands-on) and finalized at G4 (for the spinout
+  team): the spec set, the repo with green CI, the deployment runbook, an export of
+  the launch's full Signal history and Forum pipeline, the channel playbook, and the
+  known-debt register. **Acceptance test for the package: a competent engineer with
+  no prior context can run the product locally and deploy it within one day using
+  only the package.**
+
+---
+
 ## Phase 1 — Selection engine (candidate intake → G0)
 
 **Goal:** any idea can go from raw thesis to a scored, evidenced go/no-go decision in
@@ -88,6 +147,10 @@ Deliverables:
    terms; candidate–operator matching surfaced during G0 drafting. Bench *recruitment*
    is a studio workstream that starts in parallel with this phase, not after it — it is
    the slowest asset to build and it gates promotion (FRAMEWORK §5).
+6. **Mission Control shell** — the web app's first cut: candidate registry browsing,
+   scorecard entry and review, the G0 approval queue, and configuration screens for
+   clusters and the operator bench. From this phase on, every new capability lands as
+   a Mission Control surface.
 
 Acceptance: run 10 real candidates through it; ≥ 8 reach a signed G0 decision within the
 2-day cap; both gating dimensions have evidence attached, not vibes; every signed memo
@@ -136,6 +199,13 @@ Deliverables:
      in Forum flow back as Signals.
 5. **Launch checklist runner** — brand assets, domain, page, sequences, social, pipeline,
    thresholds loaded, caps armed. A launch is "live" only when the checklist is green.
+   Runs in Mission Control's Control pane, alongside the adapter configuration and
+   health screens added this phase.
+6. **Launch codebase factory** — the golden repo template and the spec-first pipeline
+   (PRD from the G0 memo, architecture doc, ADRs) from **Engineering discipline**
+   above, applied to every launch that ships software this phase — including the
+   internal tooling behind service-first delivery. Handoff-readiness is not deferred
+   to the gate that needs it.
 
 Acceptance: launch tournament 1 (3–5 candidates) with ≤ 3 days G0→live each; every lead in
 Forum traceable to its channel; zero cross-launch duplicate sequencing.
@@ -157,17 +227,18 @@ Deliverables:
    metrics everywhere the dashboard sorts. Because absolute channel benchmarks decay as
    outbound saturates (`CRITIQUE.md` §3), G1 thresholds are recalibrated per tournament
    against the running cross-launch baseline, not trusted as constants.
-2. **Tournament dashboard** — every live launch vs. its pre-committed thresholds: current
-   value, trend, days-to-cap remaining, spend vs. budget cap. Color state is computed,
-   not asserted.
+2. **Tournament dashboard** — Mission Control's Data-summary pane: every live launch
+   vs. its pre-committed thresholds — current value, trend, days-to-cap remaining,
+   spend vs. budget cap. Color state is computed, not asserted.
 3. **Kill/extend/promote queue with the concentration trigger** — when a launch hits
    its cap or clears its gate, it enters the decision queue. Kill is the default: an
    `extend` requires an attached memo naming the one specific re-angle and its new
    (shorter) cap; the system enforces the one-re-angle-per-gate rule by refusing a
    second extension at the same gate. A **G2 pass fires the concentration trigger**: a
    same-week queue item that raises the launch's budget caps, notifies its matched
-   operator to go hands-on, and moves it to the top of the review order — concentration
-   is a system event, not a ceremony deferred to promotion.
+   operator to go hands-on, assembles the first **handoff package** (see Engineering
+   discipline) for that operator, and moves the launch to the top of the review order —
+   concentration is a system event, not a ceremony deferred to promotion.
 4. **Stage-appropriate signal weighting** — self-serve launches gate on activation
    metrics; sales-assisted ones gate on Forum stage progression (calls held, pilots
    signed). Which profile applies is declared at G0, not chosen after.
@@ -192,7 +263,7 @@ learnings from a killed launch.
 becoming the bottleneck it inevitably wants to become.
 
 Deliverables:
-1. **Portfolio view** — all launches across tournaments by lane (substitution vs.
+1. **Portfolio view** — Mission Control's top level: all launches across tournaments by lane (substitution vs.
    vertical), **cluster**, gate stage, spend, and signal quality; lane-mix tracking
    against the 2/3–1/3 starting ratio and the at-least-half-clustered rule, with
    per-tournament adjustment (FRAMEWORK §5); cluster asset health (list size, engagement,
@@ -207,8 +278,10 @@ Deliverables:
    checklist (entity and cap table per the operator-equity model resolved before
    tournament 1 — FRAMEWORK §7), **data handover** (its Forum pipeline and lead history
    export cleanly to the new company's own stack; cluster-shared assets stay with the
-   studio, with agreed access terms for the spinout), and **playbook retention** (channel
-   and message learnings stay in the studio corpus).
+   studio, with agreed access terms for the spinout), the **finalized handoff package**
+   (spec set, repo with green CI, runbook, Signal history, known-debt register — held
+   to the one-day acceptance test in Engineering discipline), and **playbook retention**
+   (channel and message learnings stay in the studio corpus).
 4. **Channel health & compliance** — deliverability monitoring across Neubloc sending
    domains, Vox account standing, suppression-list integrity, CAN-SPAM/GDPR hygiene
    (per-launch privacy policy on every landing property, honored opt-outs shared
