@@ -3,7 +3,7 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Last-Z Mission Control</title>
+<title>Gantry Mission Control</title>
 <style>
   :root{
     --bg:#0e1116; --panel:#161b23; --panel2:#1d242f; --line:#2a3341;
@@ -75,8 +75,10 @@
 </head>
 <body>
 <header>
-  <h1>LAST-Z &nbsp;/ &nbsp;Mission Control</h1>
+  <h1>GANTRY &nbsp;/ &nbsp;Mission Control</h1>
   <span class="sub">Phase 1 — Selection Engine · candidate intake → G0</span>
+  <span style="margin-left:auto" class="sub" id="who"></span>
+  <button class="act sec" style="padding:4px 10px;font-size:12px" onclick="logout()">Sign out</button>
 </header>
 <div class="wrap">
   <div class="tiles" id="tiles"></div>
@@ -96,10 +98,13 @@ const api = async (path, opts) => {
     method: opts.method || 'POST',
     body: opts.body ? JSON.stringify(opts.body) : undefined
   } : undefined);
+  if (r.status === 401) { location.href = '/login'; throw new Error('signed out'); }
   if (!r.ok) { const e = await r.json().catch(()=>({detail:r.statusText}));
     throw new Error(e.detail || r.statusText); }
   return r.json();
 };
+async function logout(){ await api('/logout', {body:{}}); location.href='/login'; }
+api('/me').then(m => { document.getElementById('who').textContent = m.email; }).catch(()=>{});
 
 const $ = sel => document.querySelector(sel);
 const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
@@ -164,7 +169,7 @@ async function renderQueue(){
 async function decide(slug, approved){
   const notes = prompt(approved ? 'Approval notes:' : 'Rejection rationale:') ?? '';
   try {
-    await api(`/candidates/${slug}/decision`, {body:{approved, decided_by:'studio-review', notes}});
+    await api(`/candidates/${slug}/decision`, {body:{approved, notes}});
     toast(`${slug} ${approved?'approved':'rejected'} at G0`); refresh();
   } catch(e){ toast(e.message, true); }
 }
@@ -285,8 +290,18 @@ async function regen(slug){
 
 /* ---------- Configuration ---------- */
 async function renderConfig(){
-  const [clusters, operators] = await Promise.all([api('/clusters'), api('/operators')]);
+  const [clusters, operators, emails] = await Promise.all([
+    api('/clusters'), api('/operators'), api('/allowed-emails')]);
   $('#pane').innerHTML = `
+    <div class="card">
+      <h3>Access — allowed emails</h3>
+      <p class="muted" style="margin:4px 0 10px">Email allowlist sign-in, no passwords. Removing an email ends its sessions.</p>
+      <div class="row">${emails.map(e=>`<span class="chip b">${esc(e)}</span>`).join('')}</div>
+      <div class="row" style="margin-top:12px;max-width:420px">
+        <input id="new_email" type="email" placeholder="add teammate@company.com" style="flex:1">
+        <button class="act" onclick="addEmail()">Add</button>
+      </div>
+    </div>
     <div class="card">
       <h3>Audience clusters</h3>
       <p class="muted" style="margin:4px 0 10px">Durable shared assets — list, trust, community presence — that launches compound (FRAMEWORK §5).</p>
@@ -311,6 +326,13 @@ async function renderConfig(){
         <span class="chip">Forum · CRM — <i>not yet connected</i></span>
       </div>
     </div>`;
+}
+
+async function addEmail(){
+  const email = $('#new_email').value.trim();
+  if (!email) return;
+  try { await api('/allowed-emails', {body:{email}}); toast(email+' can now sign in'); renderConfig(); }
+  catch(e){ toast(e.message, true); }
 }
 
 refresh();

@@ -1,0 +1,4 @@
+__pycache__/
+*.pyc
+data/.auth_secret
+.pytest_cache/

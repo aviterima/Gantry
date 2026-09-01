@@ -1,4 +1,4 @@
-# Lessons from Polis (FourPaths) applied to Last-Z
+# Lessons from Polis (FourPaths) applied to Gantry
 
 Polis is the founder path of the FourPaths system: it takes a person through
 profile → candidate ventures → research → analysis → decision brief, and its
@@ -12,29 +12,29 @@ immediately, and what is queued — with the FourPaths sources for each.
    Polis requires every decision brief to carry the strongest case *against*,
    with falsifiable conditions and a kill criterion — and treats "an
    anti-recommendation containing no falsifiable condition" as a failing test.
-   → Last-Z: `case_against` and `kill_criterion` are now G0 declarations; a
+   → Gantry: `case_against` and `kill_criterion` are now G0 declarations; a
    candidate cannot be approved without both, and they render in the memo.
    The kill criterion is the sharpest possible complement to our
    pre-committed thresholds.
 2. **Bands must be harsh, carry a verb, and actually reach the screen.**
    Polis bands scores (Strong ≥85 "Rare. Act on it." … "Not this one" <40)
    but computes the band and never renders it — rigor in code review, nothing
-   for the user. → Last-Z: deterministic `band()` in `models.py`, shown in
+   for the user. → Gantry: deterministic `band()` in `models.py`, shown in
    Mission Control and the memo. Thresholds deliberately harsh: a scorer that
    calls 75% "excellent" is not helping anyone decide.
 3. **Never let the total renormalize over missing dimensions.** Polis's
    `overall()` divides by the weight actually present, so a model that omits
-   the heaviest dimension silently produces a valid-looking score. → Last-Z
+   the heaviest dimension silently produces a valid-looking score. → Gantry
    already refuses to band or decide an incomplete scorecard (status stays
    `draft`); a regression test now pins that behavior explicitly.
 4. **Determinism boundary.** Polis's best idea: the model judges dimensions;
    typed code computes totals and bands, because "asking a model to both
    judge and total lets it move the total toward the conclusion it already
-   reached." Last-Z already works this way — status, totals, gates, and
+   reached." Gantry already works this way — status, totals, gates, and
    decidability are pure functions in `models.py`, and tests assert them with
    no model in the loop. This is now written down so it survives refactors.
 
-## Already true in Last-Z (keep, and defend)
+## Already true in Gantry (keep, and defend)
 
 - **Gate before the first spend.** Polis counts a run only after the free
   welcome stage; our G0 costs two days of attention before any launch budget.

@@ -1,7 +1,9 @@
-"""Mission Control shell — Phase 1 (ENGINE-SPEC).
+"""Gantry Mission Control — Phase 1 (ENGINE-SPEC).
 
 Serves the web UI and the selection-engine API: candidate registry,
 scorecard with gating, G0 approval queue, cluster and operator config.
+All routes except the login flow require an email-allowlist session
+(see auth.py).
 
 Run:  uvicorn engine.app.main:app --reload   (from the repo root)
 """
@@ -12,10 +14,11 @@ import os
 from pathlib import Path
 from typing import Optional
 
-from fastapi import FastAPI, HTTPException
-from fastapi.responses import FileResponse
+from fastapi import FastAPI, HTTPException, Request
+from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
 from pydantic import BaseModel
 
+from . import auth
 from .memo import draft_memo
 from .models import (
     Candidate,
@@ -29,11 +32,89 @@ from .models import (
 from .registry import Registry
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
-DATA_DIR = Path(os.environ.get("LASTZ_DATA_DIR", REPO_ROOT / "data"))
+DATA_DIR = Path(
+    os.environ.get("GANTRY_DATA_DIR")
+    or os.environ.get("LASTZ_DATA_DIR")  # pre-rename compatibility
+    or REPO_ROOT / "data"
+)
 STATIC_DIR = Path(__file__).resolve().parents[1] / "static"
 
-app = FastAPI(title="Last-Z Mission Control", version="0.1.0")
+app = FastAPI(title="Gantry Mission Control", version="0.2.0")
 registry = Registry(DATA_DIR)
+
+PUBLIC_PATHS = {"/login", "/api/login"}
+
+
+@app.middleware("http")
+async def require_session(request: Request, call_next):
+    path = request.url.path
+    if path in PUBLIC_PATHS:
+        return await call_next(request)
+    email = auth.verify_cookie(DATA_DIR, request.cookies.get(auth.COOKIE_NAME))
+    if email is None:
+        if path.startswith("/api/"):
+            return JSONResponse({"detail": "authentication required"}, status_code=401)
+        return RedirectResponse("/login")
+    request.state.email = email
+    return await call_next(request)
+
+
+class LoginIn(BaseModel):
+    email: str
+
+
+@app.post("/api/login")
+def login(body: LoginIn):
+    email = body.email.strip().lower()
+    if not auth.is_allowed(DATA_DIR, email):
+        raise HTTPException(403, "This email is not on the allowlist. Ask an existing member to add it.")
+    resp = JSONResponse({"email": email})
+    resp.set_cookie(
+        auth.COOKIE_NAME,
+        auth.make_cookie(DATA_DIR, email),
+        max_age=auth.SESSION_TTL_SECONDS,
+        httponly=True,
+        samesite="lax",
+    )
+    return resp
+
+
+@app.post("/api/logout")
+def logout():
+    resp = JSONResponse({"ok": True})
+    resp.delete_cookie(auth.COOKIE_NAME)
+    return resp
+
+
+@app.get("/api/me")
+def me(request: Request):
+    return {"email": request.state.email}
+
+
+@app.get("/api/allowed-emails")
+def allowed_emails():
+    return auth.load_allowed(DATA_DIR)
+
+
+class AllowedEmailIn(BaseModel):
+    email: str
+
+
+@app.post("/api/allowed-emails", status_code=201)
+def add_allowed_email(body: AllowedEmailIn):
+    email = body.email.strip().lower()
+    if "@" not in email or "." not in email.split("@")[-1]:
+        raise HTTPException(422, "That doesn't look like an email address.")
+    emails = auth.load_allowed(DATA_DIR)
+    if email in emails:
+        raise HTTPException(409, f"{email} is already on the allowlist")
+    auth.save_allowed(DATA_DIR, emails + [email])
+    return {"email": email}
+
+
+@app.get("/login", include_in_schema=False)
+def login_page():
+    return FileResponse(STATIC_DIR / "login.html")
 
 
 def candidate_view(c: Candidate) -> dict:
@@ -189,19 +270,20 @@ def g0_queue():
 
 class DecisionIn(BaseModel):
     approved: bool
-    decided_by: str
     notes: str = ""
 
 
 @app.post("/api/candidates/{slug}/decision")
-def decide(slug: str, body: DecisionIn):
+def decide(slug: str, body: DecisionIn, request: Request):
     c = _get_or_404(slug)
     if c.decision is not None:
         raise HTTPException(409, "candidate already decided")
     decidable, blockers = c.is_decidable()
     if body.approved and not decidable:
         raise HTTPException(422, "cannot approve: " + "; ".join(blockers))
-    c.decision = G0Decision(**body.model_dump())
+    c.decision = G0Decision(
+        approved=body.approved, notes=body.notes, decided_by=request.state.email
+    )
     c.memo = draft_memo(c)
     registry.save_candidate(c)
     return candidate_view(c)

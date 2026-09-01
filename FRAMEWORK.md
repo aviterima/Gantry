@@ -1,4 +1,4 @@
-# Last-Z: A Selection Framework for Parallel Company Launches
+# Gantry: A Selection Framework for Parallel Company Launches
 
 ## 0. The thesis, restated
 

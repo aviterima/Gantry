@@ -9,6 +9,7 @@ import shutil
 import sys
 from pathlib import Path
 
+from .app import auth
 from .app.main import DATA_DIR
 from .app.memo import draft_memo
 from .app.models import (
@@ -276,6 +277,8 @@ def main() -> None:
     if "--reset" in sys.argv and DATA_DIR.exists():
         shutil.rmtree(DATA_DIR)
     registry = Registry(DATA_DIR)
+    if not (DATA_DIR / auth.ALLOWED_FILE).exists():
+        auth.save_allowed(DATA_DIR, ["aviteri@neubloc.com"])
     registry.save_clusters(CLUSTERS)
     registry.save_operators(OPERATORS)
     for c in build_candidates():

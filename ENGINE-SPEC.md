@@ -1,4 +1,4 @@
-# Last-Z Engine: Multi-Phase Specification
+# Gantry Engine: Multi-Phase Specification
 
 Companion to `FRAMEWORK.md`. The framework defines *what* we decide (lanes, scorecard,
 gates); this spec defines the system that executes it — from candidate intake through

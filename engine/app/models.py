@@ -1,4 +1,4 @@
-"""Core domain models for the Last-Z selection engine (Phase 1).
+"""Core domain models for the Gantry selection engine (Phase 1).
 
 Implements the FRAMEWORK.md §3 scorecard with its gating rules and the
 candidate lifecycle up to the G0 decision. See ENGINE-SPEC.md Phase 1.

@@ -187,11 +187,34 @@ def test_seed_references_resolve():
 
 @pytest.fixture()
 def client(tmp_path, monkeypatch):
+    from engine.app import auth
+
     reg = Registry(tmp_path)
     reg.save_clusters(CLUSTERS)
     reg.save_operators(OPERATORS)
+    auth.save_allowed(tmp_path, ["tester@example.com"])
     monkeypatch.setattr(app_main, "registry", reg)
-    return TestClient(app_main.app)
+    monkeypatch.setattr(app_main, "DATA_DIR", tmp_path)
+    c = TestClient(app_main.app)
+    assert c.post("/api/login", json={"email": "Tester@Example.com"}).status_code == 200
+    return c
+
+
+def test_auth_required_and_allowlist(tmp_path, monkeypatch):
+    from engine.app import auth
+
+    auth.save_allowed(tmp_path, ["tester@example.com"])
+    monkeypatch.setattr(app_main, "DATA_DIR", tmp_path)
+    c = TestClient(app_main.app)
+    assert c.get("/api/summary").status_code == 401
+    assert c.post("/api/login", json={"email": "stranger@example.com"}).status_code == 403
+    assert c.post("/api/login", json={"email": "tester@example.com"}).status_code == 200
+    assert c.get("/api/me").json()["email"] == "tester@example.com"
+    # adding an email lets it in; removal from the allowlist ends sessions
+    assert c.post("/api/allowed-emails", json={"email": "new@example.com"}).status_code == 201
+    assert "new@example.com" in c.get("/api/allowed-emails").json()
+    auth.save_allowed(tmp_path, ["someone-else@example.com"])
+    assert c.get("/api/summary").status_code == 401
 
 
 def test_api_full_g0_flow(client):
