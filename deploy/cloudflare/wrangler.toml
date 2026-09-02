@@ -1,6 +1,7 @@
 name = "gantry"
 main = "src/worker.js"
 compatibility_date = "2026-08-01"
+account_id = "857286fcb43e265ac633fc8ce26071f5"
 
 # The deploy script (deploy.sh) creates the KV namespace on first run and
 # fills in the id below. A placeholder id fails fast with a clear error.
