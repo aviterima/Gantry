@@ -61,6 +61,33 @@ s = re.sub(r'\{ binding = "GANTRY_KV", id = "[^"]*" \}',
 open("wrangler.toml", "w").write(s)
 PY
 
+# workers.dev subdomain: account-wide, needed once before any workers.dev
+# publish. Register it via the API if the account has none (wrangler can't
+# do this non-interactively).
+ACCOUNT_ID="${CLOUDFLARE_ACCOUNT_ID:-$(grep -oE '^account_id = "[a-f0-9]{32}"' wrangler.toml | grep -oE '[a-f0-9]{32}')}"
+if [ -n "$ACCOUNT_ID" ]; then
+  SUB=$(curl -s -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+    "https://api.cloudflare.com/client/v4/accounts/$ACCOUNT_ID/workers/subdomain" \
+    | python3 -c "import json,sys
+try: print((json.load(sys.stdin).get('result') or {}).get('subdomain') or '')
+except Exception: print('')")
+  if [ -z "$SUB" ]; then
+    for NAME in neubloc neubloc-hq gantry-neubloc; do
+      echo "Registering workers.dev subdomain '$NAME'..."
+      R=$(curl -s -X PUT -H "Authorization: Bearer $CLOUDFLARE_API_TOKEN" \
+        -H "Content-Type: application/json" \
+        "https://api.cloudflare.com/client/v4/accounts/$ACCOUNT_ID/workers/subdomain" \
+        -d "{\"subdomain\":\"$NAME\"}")
+      if echo "$R" | python3 -c "import json,sys; sys.exit(0 if json.load(sys.stdin).get('success') else 1)"; then
+        SUB="$NAME"; break
+      fi
+      echo "  '$NAME' unavailable: $R"
+    done
+    [ -n "$SUB" ] || { echo "Could not register a workers.dev subdomain — register one at https://dash.cloudflare.com/$ACCOUNT_ID/workers/onboarding and rerun."; exit 1; }
+  fi
+  echo "workers.dev subdomain: $SUB"
+fi
+
 # Session secret: set once; later runs leave the existing secret alone.
 if ! npx --yes wrangler secret list 2>/dev/null | grep -q GANTRY_SECRET; then
   echo "Setting GANTRY_SECRET..."
