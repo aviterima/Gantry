@@ -16,4 +16,4 @@ jobs:
       - run: python -m pytest engine/tests -q
       - name: Seed smoke test
         run: |
-          GANTRY_DATA_DIR=/tmp/lastz-ci-data python -m engine.seed
+          GANTRY_DATA_DIR=/tmp/gantry-ci-data python -m engine.seed

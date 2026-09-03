@@ -8,7 +8,7 @@ on:
         required: false
         type: string
   push:
-    branches: ["main", "claude/startup-launch-framework-f3h61a"]
+    branches: ["main"]
     paths:
       - "deploy/cloudflare/**"
       - "engine/**"

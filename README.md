@@ -1,8 +1,5 @@
 # Gantry
 
-*(GitHub repository still named `Last-Z` — rename it in the repo settings whenever
-convenient; GitHub redirects the old name automatically.)*
-
 A parallel company-launch studio: cheap, evidence-ranked launch tournaments that
 concentrate attention, capital, and channel trust onto paid demand as fast as possible.
 

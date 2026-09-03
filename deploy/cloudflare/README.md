@@ -27,7 +27,7 @@ Target account: the Cloudflare account of **aviteri@neubloc.com**.
 ## Deploy — local alternative (three commands)
 
 ```bash
-git clone -b claude/startup-launch-framework-f3h61a https://github.com/aviterima/Last-Z && cd Last-Z
+git clone https://github.com/aviterima/gantry && cd gantry
 pip install -r requirements.txt
 CLOUDFLARE_API_TOKEN=<token> ./deploy/cloudflare/deploy.sh
 ```
