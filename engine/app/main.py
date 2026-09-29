@@ -11,14 +11,13 @@ Run:  uvicorn engine.app.main:app --reload   (from the repo root)
 from __future__ import annotations
 
 import os
+import re
 from pathlib import Path
-from typing import Optional
 
 from fastapi import FastAPI, HTTPException, Request
 from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
-from pydantic import BaseModel
 
-from . import auth
+from . import auth, research
 from .memo import draft_memo
 from .models import (
     Candidate,
@@ -30,6 +29,7 @@ from .models import (
     Operator,
 )
 from .registry import Registry
+from .requests import AllowedEmailIn, CandidateIn, CaseIn, DecisionIn, LoginIn, MemoIn, ScoreIn
 
 REPO_ROOT = Path(__file__).resolve().parents[2]
 DATA_DIR = Path(
@@ -39,7 +39,7 @@ DATA_DIR = Path(
 )
 STATIC_DIR = Path(__file__).resolve().parents[1] / "static"
 
-app = FastAPI(title="Gantry Mission Control", version="0.2.0")
+app = FastAPI(title="Gantry Mission Control", version="0.3.0")
 registry = Registry(DATA_DIR)
 
 PUBLIC_PATHS = {"/login", "/api/login"}
@@ -59,20 +59,19 @@ async def require_session(request: Request, call_next):
     return await call_next(request)
 
 
-class LoginIn(BaseModel):
-    email: str
-
-
 @app.post("/api/login")
-def login(body: LoginIn):
+def login(body: LoginIn, request: Request):
     email = body.email.strip().lower()
-    if not auth.is_allowed(DATA_DIR, email):
-        raise HTTPException(403, "This email is not on the allowlist. Ask an existing member to add it.")
+    if not auth.access_hash(email):
+        raise HTTPException(503, "Reviewer access key is not configured")
+    if not auth.is_allowed(DATA_DIR, email) or not auth.check_access_key(email, body.access_key):
+        raise HTTPException(403, "Invalid email or access key")
     resp = JSONResponse({"email": email})
     resp.set_cookie(
         auth.COOKIE_NAME,
         auth.make_cookie(DATA_DIR, email),
         max_age=auth.SESSION_TTL_SECONDS,
+        secure=request.url.scheme == "https",
         httponly=True,
         samesite="lax",
     )
@@ -96,10 +95,6 @@ def allowed_emails():
     return auth.load_allowed(DATA_DIR)
 
 
-class AllowedEmailIn(BaseModel):
-    email: str
-
-
 @app.post("/api/allowed-emails", status_code=201)
 def add_allowed_email(body: AllowedEmailIn):
     email = body.email.strip().lower()
@@ -117,9 +112,26 @@ def login_page():
     return FileResponse(STATIC_DIR / "login.html")
 
 
+def approval_blockers(c: Candidate) -> list[str]:
+    blockers = c.is_decidable()[1]
+    if c.cluster and c.cluster not in {x.slug for x in registry.list_clusters()}:
+        blockers.append("unknown cluster")
+    if c.operator and c.operator not in {x.slug for x in registry.list_operators()}:
+        blockers.append("unknown operator")
+    return blockers
+
+
+def validate_references(c: Candidate) -> None:
+    errors = [x for x in approval_blockers(c) if x.startswith("unknown ")]
+    if errors:
+        raise HTTPException(422, "; ".join(errors))
+
+
 def candidate_view(c: Candidate) -> dict:
-    decidable, blockers = c.is_decidable()
+    blockers = approval_blockers(c)
+    decidable = not blockers
     view = c.model_dump(mode="json")
+    view["memo"] = draft_memo(c)
     view["status"] = c.status.value
     view["total_score"] = c.scorecard.total()
     view["band"] = c.scorecard.band()
@@ -138,9 +150,12 @@ def summary():
     by_status: dict[str, int] = {s.value: 0 for s in CandidateStatus}
     for c in candidates:
         by_status[c.status.value] += 1
-    queue = [c for c in candidates if c.status == CandidateStatus.scored and c.is_decidable()[0]]
+    queue = [
+        c for c in candidates if c.status == CandidateStatus.scored and not approval_blockers(c)
+    ]
     return {
         "candidates": len(candidates),
+        "demo_candidates": sum(c.is_demo for c in candidates),
         "by_status": by_status,
         "g0_queue": len(queue),
         "clusters": len(registry.list_clusters()),
@@ -164,22 +179,6 @@ def get_candidate(slug: str):
         raise HTTPException(404, f"no candidate '{slug}'")
 
 
-class CandidateIn(BaseModel):
-    slug: str
-    name: str
-    one_liner: str
-    lane: str
-    delivery_mode: str
-    persona: str = ""
-    channel: str = ""
-    cluster: Optional[str] = None
-    cluster_exception: str = ""
-    operator: Optional[str] = None
-    operator_exception: str = ""
-    case_against: str = ""
-    kill_criterion: str = ""
-
-
 @app.post("/api/candidates", status_code=201)
 def create_candidate(body: CandidateIn):
     try:
@@ -188,6 +187,7 @@ def create_candidate(body: CandidateIn):
     except KeyError:
         pass
     c = Candidate.model_validate(body.model_dump())
+    validate_references(c)
     c.memo = draft_memo(c)
     registry.save_candidate(c)
     return candidate_view(c)
@@ -198,14 +198,13 @@ def update_candidate(slug: str, body: CandidateIn):
     c = _get_or_404(slug)
     if c.decision is not None:
         raise HTTPException(409, "candidate already has a G0 decision; declarations are locked")
-    updated = c.model_copy(update=body.model_dump(exclude={"slug"}))
+    if body.slug != slug:
+        raise HTTPException(422, "slug is immutable")
+    updated = Candidate.model_validate({**c.model_dump(), **body.model_dump()})
+    validate_references(updated)
     updated.memo = draft_memo(updated)
     registry.save_candidate(updated)
     return candidate_view(updated)
-
-
-class ScoreIn(BaseModel):
-    dimensions: dict[str, DimensionScore]
 
 
 @app.post("/api/candidates/{slug}/score")
@@ -213,7 +212,7 @@ def score_candidate(slug: str, body: ScoreIn):
     c = _get_or_404(slug)
     if c.decision is not None:
         raise HTTPException(409, "candidate already has a G0 decision; the scorecard is locked")
-    c.scorecard.dimensions.update(body.dimensions)
+    c.scorecard.dimensions = dict(body.dimensions)
     c.memo = draft_memo(c)
     registry.save_candidate(c)
     return candidate_view(c)
@@ -231,11 +230,6 @@ def set_thresholds(slug: str, body: GateThresholds):
     return candidate_view(c)
 
 
-class CaseIn(BaseModel):
-    case_against: str
-    kill_criterion: str
-
-
 @app.post("/api/candidates/{slug}/case")
 def set_case(slug: str, body: CaseIn):
     c = _get_or_404(slug)
@@ -250,7 +244,7 @@ def set_case(slug: str, body: CaseIn):
 
 @app.post("/api/candidates/{slug}/memo")
 def regenerate_memo(slug: str):
-    c = _get_or_404(slug)
+    c = _editable(slug)
     c.memo = draft_memo(c)
     registry.save_candidate(c)
     return {"memo": c.memo}
@@ -268,18 +262,13 @@ def g0_queue():
     return out
 
 
-class DecisionIn(BaseModel):
-    approved: bool
-    notes: str = ""
-
-
 @app.post("/api/candidates/{slug}/decision")
 def decide(slug: str, body: DecisionIn, request: Request):
     c = _get_or_404(slug)
     if c.decision is not None:
         raise HTTPException(409, "candidate already decided")
-    decidable, blockers = c.is_decidable()
-    if body.approved and not decidable:
+    blockers = approval_blockers(c)
+    if body.approved and blockers:
         raise HTTPException(422, "cannot approve: " + "; ".join(blockers))
     c.decision = G0Decision(
         approved=body.approved, notes=body.notes, decided_by=request.state.email
@@ -329,7 +318,68 @@ def index():
 
 
 def _get_or_404(slug: str) -> Candidate:
+    if not re.fullmatch(r"[a-z0-9][a-z0-9-]*", slug):
+        raise HTTPException(404, "candidate not found")
     try:
         return registry.get_candidate(slug)
     except KeyError:
         raise HTTPException(404, f"no candidate '{slug}'")
+
+
+def _editable(slug: str) -> Candidate:
+    c = _get_or_404(slug)
+    if c.decision:
+        raise HTTPException(409, "candidate already has a G0 decision; record is locked")
+    return c
+
+
+@app.put("/api/candidates/{slug}/memo")
+def edit_memo(slug: str, body: MemoIn):
+    c = _editable(slug)
+    c.memo_notes = body.memo_notes
+    c.memo = draft_memo(c)
+    registry.save_candidate(c)
+    return candidate_view(c)
+
+
+@app.get("/api/research-status")
+def research_status():
+    return {"configured": research.configured()}
+
+
+@app.post("/api/candidates/{slug}/research")
+async def run_research(slug: str):
+    c = _editable(slug)
+    if not research.configured():
+        raise HTTPException(503, "Research provider is not configured")
+    before = c.model_dump_json()
+    try:
+        corpus = await research.research_candidate(c)
+    except Exception:
+        raise HTTPException(502, "Research provider failed or returned invalid evidence") from None
+    current = _editable(slug)
+    if current.model_dump_json() != before:
+        raise HTTPException(409, "Candidate changed during research; run again")
+    current.research = corpus
+    registry.save_candidate(current)
+    return candidate_view(current)
+
+
+@app.post("/api/candidates/{slug}/accept-research")
+def accept_research(slug: str):
+    c = _editable(slug)
+    if not c.research or not c.research.proposed_scores:
+        raise HTTPException(422, "No proposed scores to accept")
+    sources = {x.id: x for x in c.research.sources}
+    for name, proposal in c.research.proposed_scores.items():
+        evidence = (
+            proposal.evidence
+            + "\nSources: "
+            + "; ".join(
+                sources[x].url + " (" + sources[x].retrieved_at + ")" for x in proposal.source_ids
+            )
+        )
+        c.scorecard.dimensions[name] = DimensionScore(score=proposal.score, evidence=evidence)
+    c.memo = draft_memo(c)
+    registry.save_candidate(c)
+    return candidate_view(c)

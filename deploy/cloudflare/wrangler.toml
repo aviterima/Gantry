@@ -12,6 +12,7 @@ kv_namespaces = [
 [[rules]]
 type = "Text"
 globs = ["**/*.html"]
+fallthrough = false
 
 # Secrets (set once, not stored here):
 #   npx wrangler secret put GANTRY_SECRET   # any long random string

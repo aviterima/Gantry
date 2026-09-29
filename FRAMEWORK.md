@@ -123,7 +123,7 @@ to make kill decisions later feel less personal.
 |---|-----------|----------|--------------|
 | 1 | **Pain intensity** | Is this hair-on-fire (compliance deadline, revenue leak, labor shortage) or a vitamin? | Nice-to-have with no forcing event |
 | 2 | **Buyer reachability** | Can we reach 1,000+ qualified buyers through automatable channels (outbound, SEO, ads, communities) for < $2k? | Buyer identifiable only through relationships |
-| 3 | **Time-to-signal** | Will a real buyer act (sign up, reply, book a call, pre-pay) within 4–6 weeks of launch? | Sales cycle structurally > 1 quarter |
+| 3 | **Time-to-signal** | Will a real buyer pay or make a paid commitment within 4–6 weeks of launch? | Sales cycle structurally > 1 quarter |
 | 4 | **Budget existence** | Does the buyer already pay for something adjacent (legacy vendor, consultant, headcount)? Replacing spend beats creating it. | "They'd have to find new budget" |
 | 5 | **Incumbent exposure** | If the dominant horizontal vendor ships an AI UI tomorrow, does our product die? | We depend on data the incumbent already holds |
 | 6 | **AI leverage** | Does AI collapse the cost of the *value delivery* (the expert judgment), not merely the cost of building the app? | AI only helped us write the code |
@@ -275,3 +275,10 @@ precious, it has failed.
    live launches one reviewer can honestly evaluate? That number, not budget, sets
    tournament size — and the G2 concentration rule tightens it further, since every
    survivor consumes a multiple of a probe's attention.
+
+## v0.3 approval policy clarification
+
+New G0 approvals require at least 35/50 (Credible), in addition to all gating
+and declaration requirements. Conditional and lower bands must improve before
+launch approval. This policy is proposed in the v0.3 review branch. Existing
+signed decisions remain historical records. See ADR-0003.

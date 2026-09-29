@@ -8,9 +8,9 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Optional
+from typing import Literal, Optional
 
-from pydantic import BaseModel, Field
+from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
 # FRAMEWORK §3: dimensions 2 and 3 are gating, not just scored.
 GATING_DIMENSIONS = ("buyer_reachability", "time_to_signal")
@@ -30,7 +30,7 @@ BANDS: tuple[tuple[int, str, str], ...] = (
 DIMENSIONS: dict[str, str] = {
     "pain_intensity": "Hair-on-fire pain vs. a vitamin?",
     "buyer_reachability": "1,000+ qualified buyers reachable via automatable channels for < $2k?",
-    "time_to_signal": "Will a real buyer pay or commit within 4-8 weeks of launch?",
+    "time_to_signal": "Will a real buyer pay or commit within 4-6 weeks of launch?",
     "budget_existence": "Does the buyer already pay for something adjacent?",
     "incumbent_exposure": "Survives the incumbent shipping an AI UI tomorrow?",
     "ai_leverage": "Does AI collapse the cost of the value delivery, not just the code?",
@@ -59,19 +59,30 @@ class CandidateStatus(str, Enum):
     g0_rejected = "g0_rejected"
 
 
-class DimensionScore(BaseModel):
-    score: int = Field(ge=1, le=5)
+class StrictModel(BaseModel):
+    model_config = ConfigDict(extra="forbid")
+
+
+class DimensionScore(StrictModel):
+    score: int = Field(ge=1, le=5, strict=True)
     evidence: str = ""  # gating dimensions need evidence, not vibes
 
 
-class Scorecard(BaseModel):
+class Scorecard(StrictModel):
     dimensions: dict[str, DimensionScore] = Field(default_factory=dict)
+
+    @field_validator("dimensions")
+    @classmethod
+    def known_dimensions(cls, value):
+        if set(value) - set(DIMENSIONS):
+            raise ValueError("unknown score dimension")
+        return value
 
     def missing_dimensions(self) -> list[str]:
         return [d for d in DIMENSIONS if d not in self.dimensions]
 
     def total(self) -> int:
-        return sum(d.score for d in self.dimensions.values())
+        return sum(self.dimensions[d].score for d in DIMENSIONS if d in self.dimensions)
 
     def failed_gates(self) -> list[str]:
         """Gating dimensions that score below the floor or lack evidence."""
@@ -100,19 +111,17 @@ class Scorecard(BaseModel):
         return None
 
 
-class GateThresholds(BaseModel):
+class GateThresholds(StrictModel):
     """Pre-committed G1-G3 thresholds, written at G0, never after seeing data."""
 
     g1_reachability: str = ""
     g2_engagement: str = ""
     g3_retention: str = ""
-    budget_cap_usd: int = 2000
-    time_cap_weeks: int = 3
+    budget_cap_usd: int = Field(default=2000, gt=0, strict=True)
+    time_cap_weeks: int = Field(default=3, gt=0, strict=True)
 
     def is_complete(self) -> bool:
-        return all(
-            v.strip() for v in (self.g1_reachability, self.g2_engagement, self.g3_retention)
-        )
+        return all(v.strip() for v in (self.g1_reachability, self.g2_engagement, self.g3_retention))
 
 
 class G0Decision(BaseModel):
@@ -122,9 +131,56 @@ class G0Decision(BaseModel):
     decided_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
 
 
+class ResearchSource(StrictModel):
+    id: str = Field(min_length=1)
+    url: str = Field(pattern=r"^https?://[^\s/]+(?:/[^\s]*)?$")
+    title: str = Field(min_length=1)
+    retrieved_at: str = Field(
+        pattern=r"^\d{4}-\d{2}-\d{2}T\d{2}:\d{2}:\d{2}(?:\.\d+)?(?:Z|[+-]\d{2}:\d{2})$"
+    )
+    excerpt: str = Field(min_length=1)
+
+    @field_validator("retrieved_at")
+    @classmethod
+    def timestamp(cls, value):
+        datetime.fromisoformat(value.replace("Z", "+00:00"))
+        return value
+
+
+class ProposedScore(DimensionScore):
+    evidence: str = Field(min_length=1, pattern=r"\S")
+    source_ids: list[str] = Field(min_length=1)
+    confidence: Literal["low", "medium", "high"]
+
+
+class ResearchCorpus(StrictModel):
+    workflow_map: str
+    regulatory_landscape: str
+    incumbents: str
+    budget_evidence: str
+    persona: str
+    watering_holes: str
+    case_against: str
+    kill_criterion: str
+    sources: list[ResearchSource] = Field(min_length=1, max_length=50)
+    proposed_scores: dict[str, ProposedScore]
+
+    @model_validator(mode="after")
+    def citations_resolve(self):
+        ids = [s.id for s in self.sources]
+        if len(ids) != len(set(ids)):
+            raise ValueError("duplicate research source ID")
+        if set(self.proposed_scores) - set(DIMENSIONS):
+            raise ValueError("unknown score dimension")
+        for proposal in self.proposed_scores.values():
+            if set(proposal.source_ids) - set(ids):
+                raise ValueError("unresolved source citation")
+        return self
+
+
 class Candidate(BaseModel):
     slug: str = Field(pattern=r"^[a-z0-9][a-z0-9-]*$")
-    name: str
+    name: str = Field(min_length=1, pattern=r"\S")
     one_liner: str
     lane: Lane
     delivery_mode: DeliveryMode
@@ -141,6 +197,9 @@ class Candidate(BaseModel):
     kill_criterion: str = ""
     scorecard: Scorecard = Field(default_factory=Scorecard)
     thresholds: GateThresholds = Field(default_factory=GateThresholds)
+    memo_notes: str = ""
+    is_demo: bool = False
+    research: Optional[ResearchCorpus] = None
     memo: str = ""
     decision: Optional[G0Decision] = None
     created_at: datetime = Field(default_factory=lambda: datetime.now(timezone.utc))
@@ -162,6 +221,10 @@ class Candidate(BaseModel):
     def declaration_gaps(self) -> list[str]:
         """G0 declarations still missing (each needs a value or a written exception)."""
         gaps = []
+        if not self.persona.strip():
+            gaps.append("persona")
+        if not self.channel.strip():
+            gaps.append("channel")
         if not self.cluster and not self.cluster_exception.strip():
             gaps.append("cluster")
         if not self.operator and not self.operator_exception.strip():
@@ -184,21 +247,24 @@ class Candidate(BaseModel):
         failed = self.scorecard.failed_gates()
         if failed:
             blockers.append(f"failed gating dimensions: {', '.join(failed)}")
+        if not missing and self.scorecard.total() < 35:
+            blockers.append("score below approval floor: 35/50 required")
         gaps = self.declaration_gaps()
         if gaps:
             blockers.append(f"missing declarations: {', '.join(gaps)}")
         return (not blockers, blockers)
 
 
-class Cluster(BaseModel):
+class Cluster(StrictModel):
     slug: str = Field(pattern=r"^[a-z0-9][a-z0-9-]*$")
-    name: str
+    name: str = Field(min_length=1, pattern=r"\S")
     description: str = ""
     watering_holes: list[str] = Field(default_factory=list)
 
 
-class Operator(BaseModel):
+class Operator(StrictModel):
     slug: str = Field(pattern=r"^[a-z0-9][a-z0-9-]*$")
-    name: str
+    name: str = Field(min_length=1, pattern=r"\S")
+    equity_notes: str = ""
     domain_profile: str = ""
-    load: int = 0  # matched candidates/launches currently carried
+    load: int = Field(default=0, ge=0, strict=True)  # matched candidates/launches currently carried

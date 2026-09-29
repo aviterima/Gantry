@@ -25,8 +25,9 @@
 <body>
   <form class="card" onsubmit="signin(event)">
     <h1>GANTRY <span class="z">/</span> MISSION CONTROL</h1>
-    <p>Sign in with your email. Access is allowlist-only — no password.</p>
+    <p>Enter your allowlisted email and the access key provided by the owner.</p>
     <input type="email" id="email" placeholder="you@example.com" autocomplete="email" required autofocus>
+    <input type="password" id="access_key" placeholder="Reviewer access key" autocomplete="current-password" required aria-label="Reviewer access key" style="margin-top:12px">
     <button type="submit">Sign in</button>
     <div class="err" id="err"></div>
   </form>
@@ -36,7 +37,7 @@ async function signin(e){
   document.getElementById('err').textContent = '';
   const r = await fetch('/api/login', {method:'POST',
     headers:{'Content-Type':'application/json'},
-    body: JSON.stringify({email: document.getElementById('email').value})});
+    body: JSON.stringify({email: document.getElementById('email').value, access_key: document.getElementById('access_key').value})});
   if (r.ok) { location.href = '/'; }
   else {
     const d = await r.json().catch(()=>({detail:'Sign-in failed.'}));

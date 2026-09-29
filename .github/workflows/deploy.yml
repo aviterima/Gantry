@@ -1,40 +1,33 @@
 name: Deploy to Cloudflare
-
+# Publication is explicit; merging a reviewed code change does not deploy it.
 on:
   workflow_dispatch:
-    inputs:
-      cloudflare_api_token:
-        description: "One-off Cloudflare API token (optional; normally use the CLOUDFLARE_API_TOKEN repo secret)"
-        required: false
-        type: string
-  push:
-    branches: ["main"]
-    paths:
-      - "deploy/cloudflare/**"
-      - "engine/**"
-      - ".github/workflows/deploy.yml"
-
+permissions:
+  contents: read
 jobs:
   deploy:
     runs-on: ubuntu-latest
     env:
-      CLOUDFLARE_API_TOKEN: ${{ inputs.cloudflare_api_token || secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_API_TOKEN: ${{ secrets.CLOUDFLARE_API_TOKEN }}
+      CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
+      GANTRY_ACCESS_KEY_HASHES: ${{ secrets.GANTRY_ACCESS_KEY_HASHES }}
     steps:
-      - name: Check for Cloudflare token
-        run: |
-          if [ -z "$CLOUDFLARE_API_TOKEN" ]; then
-            echo "::error::No Cloudflare token: set the CLOUDFLARE_API_TOKEN repository secret (Settings -> Secrets and variables -> Actions) or pass the workflow input."
-            exit 1
-          fi
       - uses: actions/checkout@v4
       - uses: actions/setup-node@v4
         with:
-          node-version: "20"
+          node-version: "22"
+          cache: npm
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - run: pip install -r requirements.txt
+      - run: pip install -r requirements-dev.txt
+      - run: npm ci
+      - run: python -m engine.export_contract
+      - run: node scripts/build-validators.mjs
+      - run: python -m ruff check engine
+      - run: python -m mypy
+      - run: python -m pytest engine/tests -q
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:ui
       - name: Deploy
-        env:
-          CLOUDFLARE_ACCOUNT_ID: ${{ secrets.CLOUDFLARE_ACCOUNT_ID }}
         run: ./deploy/cloudflare/deploy.sh

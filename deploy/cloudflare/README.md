@@ -1,54 +1,42 @@
 # Gantry on Cloudflare Workers
 
-A 1:1 port of the Phase 1 engine (`engine/app`) to a Cloudflare Worker:
-same API routes, same email-allowlist auth and cookie scheme, same domain
-rules, and the **same UI files** (imported verbatim from `engine/static/`,
-so the two deployments cannot drift visually). Storage is Workers KV;
-`src/seed.json` is generated from `engine/seed.py` so seed data has one
-source of truth.
+The Worker and FastAPI use the same UI and generated request schemas. Pydantic
+exports JSON Schema; a build-time generator creates static JavaScript validators,
+so the deployed Worker never compiles schemas using eval. Run `npm ci` from the
+repository root; the deploy script builds these artifacts automatically.
 
-Target account: the Cloudflare account of **aviteri@neubloc.com**.
+## Publication
 
-## Deploy — recommended path: GitHub Actions (one secret, then automatic)
-
-1. In that Cloudflare account, create an API token:
-   dash.cloudflare.com → My Profile → API Tokens → Create Token → use the
-   **Edit Cloudflare Workers** template → Continue → Create Token. Copy it.
-2. Add it to this GitHub repo as an Actions secret named
-   `CLOUDFLARE_API_TOKEN` (repo → Settings → Secrets and variables →
-   Actions → New repository secret). If the token can see more than one
-   Cloudflare account, also add `CLOUDFLARE_ACCOUNT_ID` (shown in the
-   dashboard sidebar).
-3. The `Deploy to Cloudflare` workflow (`.github/workflows/deploy.yml`)
-   deploys automatically on pushes touching `engine/` or
-   `deploy/cloudflare/`, and can be run on demand from the Actions tab
-   (or triggered by Claude via the GitHub API).
-
-## Deploy — local alternative (three commands)
+Deployment is **manual** through the `Deploy to Cloudflare` workflow, after review.
+The workflow runs tests first. Repository secrets: `CLOUDFLARE_API_TOKEN`, optional
+`CLOUDFLARE_ACCOUNT_ID`, and `GANTRY_ACCESS_KEY_HASHES` (JSON email → SHA-256 digest).
+Never submit API credentials as workflow text inputs.
 
 ```bash
-git clone https://github.com/aviterima/gantry && cd gantry
-pip install -r requirements.txt
-CLOUDFLARE_API_TOKEN=<token> ./deploy/cloudflare/deploy.sh
+# From the repo root, with authorized secrets already in the environment:
+./deploy/cloudflare/deploy.sh
 ```
 
-The script is idempotent either way: it reuses the `gantry-kv` namespace if
-one exists (never duplicating it), sets the session secret only once, and
-regenerates `seed.json` from the Python source of truth on every run. The
-printed `*.workers.dev` URL is permanent; a custom domain can be attached
-from the Cloudflare dashboard (Workers → gantry → Settings → Domains &
-Routes).
+The script uses the locked Wrangler version, reuses the KV namespace, preserves
+the cookie signing secret, and refuses first deployment without reviewer-key
+configuration. It can register an account-level workers.dev subdomain; review
+that account change before running. The Worker never overwrites existing seed
+candidate keys during first initialization. Do not delete the `seeded` marker.
 
-Seeding happens on the worker's first request and only once — it never
-overwrites live data. The allowlist starts as `aviteri@neubloc.com`; add
-more from the app's Configuration pane.
+Optional research secrets: `GANTRY_RESEARCH_URL` and `GANTRY_RESEARCH_TOKEN`.
+The included Python provider service is described in `engine/README.md`.
 
-## Known debt
+## Verified deployment history
 
-- KV is eventually consistent (~60s across edge locations). Fine for a
-  small review team; repay with D1/Durable Objects when concurrent
-  reviewers become routine.
-- Email allowlist identifies but does not verify mailbox ownership —
-  magic-link verification lands with the Neubloc adapter (Phase 2).
-- `PUT /api/candidates/{slug}` (declaration edits) is not yet ported; the
-  UI does not currently call it.
+As checked 2026-09-29, this repository has two failed deployment runs and no
+successful one. The latest (September 8, run 34260303414) failed at **Check for
+Cloudflare token**, before checkout or deployment. A separate manual deployment
+is not ruled out. No live Worker URL has been verified. This build was not deployed.
+
+## Debt
+
+KV is eventually consistent, not a transactional store. Use one reviewer only;
+move state to a transactional service before simultaneous reviewers. Contract tests
+exercise the Worker with deterministic KV, and do not model cross-edge races.
+Any existing KV records lacking `is_demo` require owner review before classifying
+them; no operational records are automatically relabeled by slug.

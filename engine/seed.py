@@ -1,13 +1,12 @@
 """Seed the registry with demo data. Run from the repo root:
 
-    python -m engine.seed [--reset]
+python -m engine.seed [--reset]
 """
 
 from __future__ import annotations
 
 import shutil
 import sys
-from pathlib import Path
 
 from .app import auth
 from .app.main import DATA_DIR
@@ -63,9 +62,7 @@ OPERATORS = [
 
 
 def _sc(**scores_and_evidence) -> Scorecard:
-    dims = {
-        k: DimensionScore(score=v[0], evidence=v[1]) for k, v in scores_and_evidence.items()
-    }
+    dims = {k: DimensionScore(score=v[0], evidence=v[1]) for k, v in scores_and_evidence.items()}
     return Scorecard(dimensions=dims)
 
 
@@ -87,15 +84,30 @@ def build_candidates() -> list[Candidate]:
         kill_criterion="Kill if >50% of engagement hours are still manual after 10 filings "
         "across 3 jurisdictions, or turnaround beats the GC's own baseline by <20%.",
         scorecard=_sc(
-            pain_intensity=(5, "Permit delays stall jobs and crews; GCs quote 2-6 week losses per project."),
-            buyer_reachability=(5, "Public contractor license registries; 40k+ emails harvestable; cluster list exists."),
-            time_to_signal=(4, "Service-first: paid expediting engagements can close in 2-3 weeks."),
+            pain_intensity=(
+                5,
+                "Permit delays stall jobs and crews; GCs quote 2-6 week losses per project.",
+            ),
+            buyer_reachability=(
+                5,
+                "Public contractor license registries; 40k+ emails harvestable; cluster list exists.",
+            ),
+            time_to_signal=(
+                4,
+                "Service-first: paid expediting engagements can close in 2-3 weeks.",
+            ),
             budget_existence=(5, "GCs already pay human expediters $500-2k per permit."),
             incumbent_exposure=(4, "No horizontal incumbent owns municipal permitting workflows."),
-            ai_leverage=(4, "AI drafts applications, tracks jurisdiction rules, chases status — the expert work."),
+            ai_leverage=(
+                4,
+                "AI drafts applications, tracks jurisdiction rules, chases status — the expert work.",
+            ),
             moat_trajectory=(4, "Jurisdiction rulebook + outcome data compounds per filing."),
             founder_market_access=(4, "Jordan (bench) sold into SMB GCs for 6 years."),
-            expansion_path=(4, "Inspections scheduling, lien waivers, licensing renewals to the same buyer."),
+            expansion_path=(
+                4,
+                "Inspections scheduling, lien waivers, licensing renewals to the same buyer.",
+            ),
             portfolio_synergy=(5, "Anchor launch for the construction-smb cluster."),
         ),
         thresholds=GateThresholds(
@@ -124,12 +136,24 @@ def build_candidates() -> list[Candidate]:
         kill_criterion="Kill if fewer than 1 of the first 5 customers converts to a monthly "
         "compliance retainer within 60 days of audit completion.",
         scorecard=_sc(
-            pain_intensity=(5, "Failed audits stop shipments; SQF/FSMA deadlines are forcing events."),
-            buyer_reachability=(4, "FDA facility registrations are public; active communities identified."),
+            pain_intensity=(
+                5,
+                "Failed audits stop shipments; SQF/FSMA deadlines are forcing events.",
+            ),
+            buyer_reachability=(
+                4,
+                "FDA facility registrations are public; active communities identified.",
+            ),
             time_to_signal=(4, "Audit-prep engagements are bought under deadline pressure."),
             budget_existence=(5, "They already pay consultants $10-30k per audit cycle."),
-            incumbent_exposure=(5, "Incumbent QMS vendors target enterprise; SMB tier is greenfield."),
-            ai_leverage=(5, "The product *is* the domain expert: plan drafting, gap analysis, doc chasing."),
+            incumbent_exposure=(
+                5,
+                "Incumbent QMS vendors target enterprise; SMB tier is greenfield.",
+            ),
+            ai_leverage=(
+                5,
+                "The product *is* the domain expert: plan drafting, gap analysis, doc chasing.",
+            ),
             moat_trajectory=(4, "Corpus of audit findings and supplier docs compounds."),
             founder_market_access=(5, "Priya (bench) ran QA at a co-packer."),
             expansion_path=(4, "Supplier verification, label compliance, recall drills."),
@@ -164,13 +188,25 @@ def build_candidates() -> list[Candidate]:
         "none converts after we provide an LP-facing assurance letter.",
         scorecard=_sc(
             pain_intensity=(4, "Emerging managers defer admin until an LP or audit forces it."),
-            buyer_reachability=(4, "Form D filings are public; emerging-manager communities are dense."),
-            time_to_signal=(3, "Self-serve signups fast; paid conversion tied to quarter-end cycles."),
+            buyer_reachability=(
+                4,
+                "Form D filings are public; emerging-manager communities are dense.",
+            ),
+            time_to_signal=(
+                3,
+                "Self-serve signups fast; paid conversion tied to quarter-end cycles.",
+            ),
             budget_existence=(5, "They already pay $15-40k/yr to legacy fund admins."),
-            incumbent_exposure=(3, "Legacy admins could ship a cheap tier, but their cost base resists it."),
+            incumbent_exposure=(
+                3,
+                "Legacy admins could ship a cheap tier, but their cost base resists it.",
+            ),
             ai_leverage=(4, "AI handles capital-call docs, K-1 prep support, LP reporting."),
             moat_trajectory=(3, "Workflow embedding and multi-year records; weaker data moat."),
-            founder_market_access=(3, "Sam is a generalist; no deep fund-admin background on bench."),
+            founder_market_access=(
+                3,
+                "Sam is a generalist; no deep fund-admin background on bench.",
+            ),
             expansion_path=(4, "Tax docs, LP portal, compliance calendar."),
             portfolio_synergy=(3, "Reuses launch stack; no cluster sharing."),
         ),
@@ -197,8 +233,14 @@ def build_candidates() -> list[Candidate]:
         operator_exception="No bench operator with maritime background.",
         scorecard=_sc(
             pain_intensity=(4, "Real coordination pain across agents, terminals, and masters."),
-            buyer_reachability=(2, "Buyers are unreachable via automatable channels — port agency is relationship-driven; no public roll, no dense community found."),
-            time_to_signal=(2, "Procurement runs through long relationship cycles; no fast paid commitment plausible."),
+            buyer_reachability=(
+                2,
+                "Buyers are unreachable via automatable channels — port agency is relationship-driven; no public roll, no dense community found.",
+            ),
+            time_to_signal=(
+                2,
+                "Procurement runs through long relationship cycles; no fast paid commitment plausible.",
+            ),
             budget_existence=(3, "Budgets exist but sit inside agency fees."),
             incumbent_exposure=(4, "No dominant horizontal incumbent."),
             ai_leverage=(3, "Some document automation; core value is coordination."),
@@ -270,7 +312,10 @@ def build_candidates() -> list[Candidate]:
         ),
     )
 
-    return [permit_pilot, complicore, ledgerlite, harbordesk, crewcast, packproof]
+    candidates = [permit_pilot, complicore, ledgerlite, harbordesk, crewcast, packproof]
+    for candidate in candidates:
+        candidate.is_demo = True
+    return candidates
 
 
 def main() -> None:
@@ -284,8 +329,10 @@ def main() -> None:
     for c in build_candidates():
         c.memo = draft_memo(c)
         registry.save_candidate(c)
-    print(f"Seeded {len(build_candidates())} candidates, {len(CLUSTERS)} clusters, "
-          f"{len(OPERATORS)} operators into {DATA_DIR}")
+    print(
+        f"Seeded {len(build_candidates())} candidates, {len(CLUSTERS)} clusters, "
+        f"{len(OPERATORS)} operators into {DATA_DIR}"
+    )
 
 
 if __name__ == "__main__":

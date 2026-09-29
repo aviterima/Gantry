@@ -53,3 +53,4 @@ thresholds:
   time_cap_weeks: 3
 decision: null
 created_at: '2026-09-01T15:48:51.620994Z'
+is_demo: true

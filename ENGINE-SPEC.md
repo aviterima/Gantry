@@ -1,5 +1,10 @@
 # Gantry Engine: Multi-Phase Specification
 
+**Implementation status (2026-09-29):** v0.3 selection work is specified in
+`engine/docs/adr/0003-selection-v03.md`. Manual workflow and provider integration
+are under review; real-candidate and live-research acceptance remain open.
+Phases 2–4 are specified, not implemented.
+
 Companion to `FRAMEWORK.md`. The framework defines *what* we decide (lanes, scorecard,
 gates); this spec defines the system that executes it — from candidate intake through
 market test — and how it integrates the operating stack:

@@ -1,26 +1,27 @@
 """Phase 1 tests: scorecard gating, registry round-trip, memo, and API flows."""
 
+import hashlib
+import json
+
 import pytest
 from fastapi.testclient import TestClient
 
 from engine.app import main as app_main
 from engine.app.memo import draft_memo
 from engine.app.models import (
+    DIMENSIONS,
     Candidate,
     CandidateStatus,
     DimensionScore,
-    DIMENSIONS,
     GateThresholds,
     Scorecard,
 )
 from engine.app.registry import Registry
-from engine.seed import build_candidates, CLUSTERS, OPERATORS
+from engine.seed import CLUSTERS, OPERATORS, build_candidates
 
 
 def full_scorecard(reach=5, tts=5) -> Scorecard:
-    dims = {
-        name: DimensionScore(score=4, evidence="test evidence") for name in DIMENSIONS
-    }
+    dims = {name: DimensionScore(score=4, evidence="test evidence") for name in DIMENSIONS}
     dims["buyer_reachability"] = DimensionScore(score=reach, evidence="test evidence")
     dims["time_to_signal"] = DimensionScore(score=tts, evidence="test evidence")
     return Scorecard(dimensions=dims)
@@ -31,6 +32,8 @@ def make_candidate(**overrides) -> Candidate:
         slug="test-co",
         name="TestCo",
         one_liner="A test company.",
+        persona="Contractor owner",
+        channel="Trade association",
         lane="vertical",
         delivery_mode="service_first",
         cluster="construction-smb",
@@ -38,9 +41,7 @@ def make_candidate(**overrides) -> Candidate:
         case_against="It might fail because of X, argued honestly.",
         kill_criterion="Kill if Y does not happen by week 4.",
         scorecard=full_scorecard(),
-        thresholds=GateThresholds(
-            g1_reachability="x", g2_engagement="y", g3_retention="z"
-        ),
+        thresholds=GateThresholds(g1_reachability="x", g2_engagement="y", g3_retention="z"),
     )
     base.update(overrides)
     return Candidate.model_validate(base)
@@ -89,8 +90,10 @@ def test_missing_cluster_without_exception_blocks_decision():
 
 def test_written_exception_satisfies_declaration():
     c = make_candidate(
-        cluster=None, cluster_exception="no cluster fit, documented",
-        operator=None, operator_exception="bench gap, documented",
+        cluster=None,
+        cluster_exception="no cluster fit, documented",
+        operator=None,
+        operator_exception="bench gap, documented",
     )
     ok, _ = c.is_decidable()
     assert ok
@@ -114,22 +117,16 @@ def test_missing_case_against_or_kill_criterion_blocks_decision():
 
 
 def test_band_is_deterministic_and_harsh():
-    strong = Scorecard(
-        dimensions={n: DimensionScore(score=5, evidence="e") for n in DIMENSIONS}
-    )
+    strong = Scorecard(dimensions={n: DimensionScore(score=5, evidence="e") for n in DIMENSIONS})
     assert strong.band()["name"] == "strong"
-    mediocre = Scorecard(
-        dimensions={n: DimensionScore(score=3, evidence="e") for n in DIMENSIONS}
-    )
+    mediocre = Scorecard(dimensions={n: DimensionScore(score=3, evidence="e") for n in DIMENSIONS})
     assert mediocre.band()["name"] == "conditional"  # 30/50 is not "excellent"
 
 
 def test_incomplete_scorecard_never_bands():
     # Guards the Polis overall() renormalization bug: a partial scorecard
     # must never produce a valid-looking band.
-    sc = Scorecard(
-        dimensions={"pain_intensity": DimensionScore(score=5, evidence="e")}
-    )
+    sc = Scorecard(dimensions={"pain_intensity": DimensionScore(score=5, evidence="e")})
     assert sc.band() is None
 
 
@@ -193,10 +190,24 @@ def client(tmp_path, monkeypatch):
     reg.save_clusters(CLUSTERS)
     reg.save_operators(OPERATORS)
     auth.save_allowed(tmp_path, ["tester@example.com"])
+    monkeypatch.setenv(
+        "GANTRY_ACCESS_KEY_HASHES",
+        json.dumps(
+            {
+                "tester@example.com": hashlib.sha256(b"test-key").hexdigest(),
+                "stranger@example.com": hashlib.sha256(b"test-key").hexdigest(),
+            }
+        ),
+    )
     monkeypatch.setattr(app_main, "registry", reg)
     monkeypatch.setattr(app_main, "DATA_DIR", tmp_path)
     c = TestClient(app_main.app)
-    assert c.post("/api/login", json={"email": "Tester@Example.com"}).status_code == 200
+    assert (
+        c.post(
+            "/api/login", json={"email": "Tester@Example.com", "access_key": "test-key"}
+        ).status_code
+        == 200
+    )
     return c
 
 
@@ -204,11 +215,25 @@ def test_auth_required_and_allowlist(tmp_path, monkeypatch):
     from engine.app import auth
 
     auth.save_allowed(tmp_path, ["tester@example.com"])
+    monkeypatch.setenv(
+        "GANTRY_ACCESS_KEY_HASHES",
+        json.dumps(
+            {
+                "tester@example.com": hashlib.sha256(b"test-key").hexdigest(),
+                "stranger@example.com": hashlib.sha256(b"test-key").hexdigest(),
+            }
+        ),
+    )
     monkeypatch.setattr(app_main, "DATA_DIR", tmp_path)
     c = TestClient(app_main.app)
     assert c.get("/api/summary").status_code == 401
     assert c.post("/api/login", json={"email": "stranger@example.com"}).status_code == 403
-    assert c.post("/api/login", json={"email": "tester@example.com"}).status_code == 200
+    assert (
+        c.post(
+            "/api/login", json={"email": "tester@example.com", "access_key": "test-key"}
+        ).status_code
+        == 200
+    )
     assert c.get("/api/me").json()["email"] == "tester@example.com"
     # adding an email lets it in; removal from the allowlist ends sessions
     assert c.post("/api/allowed-emails", json={"email": "new@example.com"}).status_code == 201
@@ -219,62 +244,95 @@ def test_auth_required_and_allowlist(tmp_path, monkeypatch):
 
 def test_api_full_g0_flow(client):
     body = {
-        "slug": "api-co", "name": "ApiCo", "one_liner": "Via API.",
-        "lane": "vertical", "delivery_mode": "self_serve",
-        "cluster": "construction-smb", "operator": "jordan-reyes",
+        "slug": "api-co",
+        "name": "ApiCo",
+        "one_liner": "Via API.",
+        "lane": "vertical",
+        "delivery_mode": "self_serve",
+        "persona": "Buyer",
+        "channel": "Outbound",
+        "cluster": "construction-smb",
+        "operator": "jordan-reyes",
     }
     assert client.post("/api/candidates", json=body).status_code == 201
 
     # approve before scoring must fail
-    r = client.post("/api/candidates/api-co/decision",
-                    json={"approved": True, "decided_by": "t"})
+    r = client.post("/api/candidates/api-co/decision", json={"approved": True})
     assert r.status_code == 422
 
     dims = {name: {"score": 4, "evidence": "e"} for name in DIMENSIONS}
-    assert client.post("/api/candidates/api-co/score",
-                       json={"dimensions": dims}).status_code == 200
-    assert client.post("/api/candidates/api-co/thresholds", json={
-        "g1_reachability": "a", "g2_engagement": "b", "g3_retention": "c",
-        "budget_cap_usd": 1000, "time_cap_weeks": 3}).status_code == 200
+    assert client.post("/api/candidates/api-co/score", json={"dimensions": dims}).status_code == 200
+    assert (
+        client.post(
+            "/api/candidates/api-co/thresholds",
+            json={
+                "g1_reachability": "a",
+                "g2_engagement": "b",
+                "g3_retention": "c",
+                "budget_cap_usd": 1000,
+                "time_cap_weeks": 3,
+            },
+        ).status_code
+        == 200
+    )
 
     # still blocked: the case against is a required declaration
-    r = client.post("/api/candidates/api-co/decision",
-                    json={"approved": True, "decided_by": "t"})
+    r = client.post("/api/candidates/api-co/decision", json={"approved": True})
     assert r.status_code == 422 and "case-against" in r.json()["detail"]
-    assert client.post("/api/candidates/api-co/case", json={
-        "case_against": "Strongest case against, argued honestly.",
-        "kill_criterion": "Kill if no paid commitment by week 4."}).status_code == 200
+    assert (
+        client.post(
+            "/api/candidates/api-co/case",
+            json={
+                "case_against": "Strongest case against, argued honestly.",
+                "kill_criterion": "Kill if no paid commitment by week 4.",
+            },
+        ).status_code
+        == 200
+    )
 
-    r = client.post("/api/candidates/api-co/decision",
-                    json={"approved": True, "decided_by": "t", "notes": "ok"})
+    r = client.post("/api/candidates/api-co/decision", json={"approved": True, "notes": "ok"})
     assert r.status_code == 200
     assert r.json()["status"] == "g0_approved"
 
     # no-moved-goalposts: thresholds locked after decision
-    r = client.post("/api/candidates/api-co/thresholds", json={
-        "g1_reachability": "moved", "g2_engagement": "b", "g3_retention": "c",
-        "budget_cap_usd": 9999, "time_cap_weeks": 9})
+    r = client.post(
+        "/api/candidates/api-co/thresholds",
+        json={
+            "g1_reachability": "moved",
+            "g2_engagement": "b",
+            "g3_retention": "c",
+            "budget_cap_usd": 9999,
+            "time_cap_weeks": 9,
+        },
+    )
     assert r.status_code == 409
     # and no double decisions
-    r = client.post("/api/candidates/api-co/decision",
-                    json={"approved": False, "decided_by": "t"})
+    r = client.post("/api/candidates/api-co/decision", json={"approved": False})
     assert r.status_code == 409
 
 
 def test_api_untestable_cannot_be_approved(client):
-    body = {"slug": "weak-co", "name": "WeakCo", "one_liner": "Unreachable buyer.",
-            "lane": "vertical", "delivery_mode": "self_serve",
-            "cluster_exception": "doc", "operator_exception": "doc"}
+    body = {
+        "slug": "weak-co",
+        "name": "WeakCo",
+        "one_liner": "Unreachable buyer.",
+        "lane": "vertical",
+        "delivery_mode": "self_serve",
+        "persona": "Buyer",
+        "channel": "Outbound",
+        "cluster_exception": "doc",
+        "operator_exception": "doc",
+    }
     client.post("/api/candidates", json=body)
     dims = {name: {"score": 4, "evidence": "e"} for name in DIMENSIONS}
     dims["buyer_reachability"] = {"score": 1, "evidence": "nobody reachable"}
     client.post("/api/candidates/weak-co/score", json={"dimensions": dims})
-    r = client.post("/api/candidates/weak-co/decision",
-                    json={"approved": True, "decided_by": "t"})
+    r = client.post("/api/candidates/weak-co/decision", json={"approved": True})
     assert r.status_code == 422
     # rejection is always allowed
-    r = client.post("/api/candidates/weak-co/decision",
-                    json={"approved": False, "decided_by": "t", "notes": "untestable"})
+    r = client.post(
+        "/api/candidates/weak-co/decision", json={"approved": False, "notes": "untestable"}
+    )
     assert r.status_code == 200
 
 

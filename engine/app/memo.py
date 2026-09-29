@@ -72,6 +72,10 @@ def draft_memo(candidate: Candidate) -> str:
         f"- **G3 retention:** {candidate.thresholds.g3_retention or '_not set_'}",
         f"- **Caps:** ${candidate.thresholds.budget_cap_usd:,} / {candidate.thresholds.time_cap_weeks} weeks",
         "",
+        "## Reviewer commentary",
+        "",
+        candidate.memo_notes or "_No additional commentary._",
+        "",
         "## Decision",
         "",
     ]

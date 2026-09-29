@@ -1,0 +1,921 @@
+{
+  "LoginIn": {
+    "additionalProperties": false,
+    "properties": {
+      "email": {
+        "title": "Email",
+        "type": "string"
+      },
+      "access_key": {
+        "default": "",
+        "title": "Access Key",
+        "type": "string"
+      }
+    },
+    "required": [
+      "email"
+    ],
+    "title": "LoginIn",
+    "type": "object"
+  },
+  "AllowedEmailIn": {
+    "additionalProperties": false,
+    "properties": {
+      "email": {
+        "pattern": "^[^@\\s]+@[^@\\s]+\\.[^@\\s]+$",
+        "title": "Email",
+        "type": "string"
+      }
+    },
+    "required": [
+      "email"
+    ],
+    "title": "AllowedEmailIn",
+    "type": "object"
+  },
+  "CandidateIn": {
+    "$defs": {
+      "DeliveryMode": {
+        "enum": [
+          "service_first",
+          "self_serve"
+        ],
+        "title": "DeliveryMode",
+        "type": "string"
+      },
+      "Lane": {
+        "enum": [
+          "substitution",
+          "vertical"
+        ],
+        "title": "Lane",
+        "type": "string"
+      }
+    },
+    "additionalProperties": false,
+    "properties": {
+      "slug": {
+        "pattern": "^[a-z0-9][a-z0-9-]*$",
+        "title": "Slug",
+        "type": "string"
+      },
+      "name": {
+        "minLength": 1,
+        "pattern": "\\S",
+        "title": "Name",
+        "type": "string"
+      },
+      "one_liner": {
+        "minLength": 1,
+        "pattern": "\\S",
+        "title": "One Liner",
+        "type": "string"
+      },
+      "lane": {
+        "$ref": "#/$defs/Lane"
+      },
+      "delivery_mode": {
+        "$ref": "#/$defs/DeliveryMode"
+      },
+      "persona": {
+        "default": "",
+        "title": "Persona",
+        "type": "string"
+      },
+      "channel": {
+        "default": "",
+        "title": "Channel",
+        "type": "string"
+      },
+      "cluster": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Cluster"
+      },
+      "cluster_exception": {
+        "default": "",
+        "title": "Cluster Exception",
+        "type": "string"
+      },
+      "operator": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Operator"
+      },
+      "operator_exception": {
+        "default": "",
+        "title": "Operator Exception",
+        "type": "string"
+      },
+      "case_against": {
+        "default": "",
+        "title": "Case Against",
+        "type": "string"
+      },
+      "kill_criterion": {
+        "default": "",
+        "title": "Kill Criterion",
+        "type": "string"
+      }
+    },
+    "required": [
+      "slug",
+      "name",
+      "one_liner",
+      "lane",
+      "delivery_mode"
+    ],
+    "title": "CandidateIn",
+    "type": "object"
+  },
+  "ScoreIn": {
+    "$defs": {
+      "DimensionScore": {
+        "additionalProperties": false,
+        "properties": {
+          "score": {
+            "maximum": 5,
+            "minimum": 1,
+            "title": "Score",
+            "type": "integer"
+          },
+          "evidence": {
+            "default": "",
+            "title": "Evidence",
+            "type": "string"
+          }
+        },
+        "required": [
+          "score"
+        ],
+        "title": "DimensionScore",
+        "type": "object"
+      }
+    },
+    "additionalProperties": false,
+    "properties": {
+      "dimensions": {
+        "additionalProperties": {
+          "$ref": "#/$defs/DimensionScore"
+        },
+        "title": "Dimensions",
+        "type": "object",
+        "default": {},
+        "propertyNames": {
+          "enum": [
+            "pain_intensity",
+            "buyer_reachability",
+            "time_to_signal",
+            "budget_existence",
+            "incumbent_exposure",
+            "ai_leverage",
+            "moat_trajectory",
+            "founder_market_access",
+            "expansion_path",
+            "portfolio_synergy"
+          ]
+        }
+      }
+    },
+    "title": "ScoreIn",
+    "type": "object"
+  },
+  "CaseIn": {
+    "additionalProperties": false,
+    "properties": {
+      "case_against": {
+        "title": "Case Against",
+        "type": "string"
+      },
+      "kill_criterion": {
+        "title": "Kill Criterion",
+        "type": "string"
+      }
+    },
+    "required": [
+      "case_against",
+      "kill_criterion"
+    ],
+    "title": "CaseIn",
+    "type": "object"
+  },
+  "MemoIn": {
+    "additionalProperties": false,
+    "properties": {
+      "memo_notes": {
+        "title": "Memo Notes",
+        "type": "string"
+      }
+    },
+    "required": [
+      "memo_notes"
+    ],
+    "title": "MemoIn",
+    "type": "object"
+  },
+  "DecisionIn": {
+    "additionalProperties": false,
+    "properties": {
+      "approved": {
+        "title": "Approved",
+        "type": "boolean"
+      },
+      "notes": {
+        "default": "",
+        "title": "Notes",
+        "type": "string"
+      }
+    },
+    "required": [
+      "approved"
+    ],
+    "title": "DecisionIn",
+    "type": "object"
+  },
+  "GateThresholds": {
+    "additionalProperties": false,
+    "description": "Pre-committed G1-G3 thresholds, written at G0, never after seeing data.",
+    "properties": {
+      "g1_reachability": {
+        "default": "",
+        "title": "G1 Reachability",
+        "type": "string"
+      },
+      "g2_engagement": {
+        "default": "",
+        "title": "G2 Engagement",
+        "type": "string"
+      },
+      "g3_retention": {
+        "default": "",
+        "title": "G3 Retention",
+        "type": "string"
+      },
+      "budget_cap_usd": {
+        "default": 2000,
+        "exclusiveMinimum": 0,
+        "title": "Budget Cap Usd",
+        "type": "integer"
+      },
+      "time_cap_weeks": {
+        "default": 3,
+        "exclusiveMinimum": 0,
+        "title": "Time Cap Weeks",
+        "type": "integer"
+      }
+    },
+    "title": "GateThresholds",
+    "type": "object"
+  },
+  "Cluster": {
+    "additionalProperties": false,
+    "properties": {
+      "slug": {
+        "pattern": "^[a-z0-9][a-z0-9-]*$",
+        "title": "Slug",
+        "type": "string"
+      },
+      "name": {
+        "minLength": 1,
+        "pattern": "\\S",
+        "title": "Name",
+        "type": "string"
+      },
+      "description": {
+        "default": "",
+        "title": "Description",
+        "type": "string"
+      },
+      "watering_holes": {
+        "items": {
+          "type": "string"
+        },
+        "title": "Watering Holes",
+        "type": "array",
+        "default": []
+      }
+    },
+    "required": [
+      "slug",
+      "name"
+    ],
+    "title": "Cluster",
+    "type": "object"
+  },
+  "Operator": {
+    "additionalProperties": false,
+    "properties": {
+      "slug": {
+        "pattern": "^[a-z0-9][a-z0-9-]*$",
+        "title": "Slug",
+        "type": "string"
+      },
+      "name": {
+        "minLength": 1,
+        "pattern": "\\S",
+        "title": "Name",
+        "type": "string"
+      },
+      "equity_notes": {
+        "default": "",
+        "title": "Equity Notes",
+        "type": "string"
+      },
+      "domain_profile": {
+        "default": "",
+        "title": "Domain Profile",
+        "type": "string"
+      },
+      "load": {
+        "default": 0,
+        "minimum": 0,
+        "title": "Load",
+        "type": "integer"
+      }
+    },
+    "required": [
+      "slug",
+      "name"
+    ],
+    "title": "Operator",
+    "type": "object"
+  },
+  "ResearchCorpus": {
+    "$defs": {
+      "ProposedScore": {
+        "additionalProperties": false,
+        "properties": {
+          "score": {
+            "maximum": 5,
+            "minimum": 1,
+            "title": "Score",
+            "type": "integer"
+          },
+          "evidence": {
+            "minLength": 1,
+            "pattern": "\\S",
+            "title": "Evidence",
+            "type": "string"
+          },
+          "source_ids": {
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1,
+            "title": "Source Ids",
+            "type": "array"
+          },
+          "confidence": {
+            "enum": [
+              "low",
+              "medium",
+              "high"
+            ],
+            "title": "Confidence",
+            "type": "string"
+          }
+        },
+        "required": [
+          "score",
+          "evidence",
+          "source_ids",
+          "confidence"
+        ],
+        "title": "ProposedScore",
+        "type": "object"
+      },
+      "ResearchSource": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "minLength": 1,
+            "title": "Id",
+            "type": "string"
+          },
+          "url": {
+            "pattern": "^https?://[^\\s/]+(?:/[^\\s]*)?$",
+            "title": "Url",
+            "type": "string"
+          },
+          "title": {
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          },
+          "retrieved_at": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?(?:Z|[+-]\\d{2}:\\d{2})$",
+            "title": "Retrieved At",
+            "type": "string"
+          },
+          "excerpt": {
+            "minLength": 1,
+            "title": "Excerpt",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "url",
+          "title",
+          "retrieved_at",
+          "excerpt"
+        ],
+        "title": "ResearchSource",
+        "type": "object"
+      }
+    },
+    "additionalProperties": false,
+    "properties": {
+      "workflow_map": {
+        "title": "Workflow Map",
+        "type": "string"
+      },
+      "regulatory_landscape": {
+        "title": "Regulatory Landscape",
+        "type": "string"
+      },
+      "incumbents": {
+        "title": "Incumbents",
+        "type": "string"
+      },
+      "budget_evidence": {
+        "title": "Budget Evidence",
+        "type": "string"
+      },
+      "persona": {
+        "title": "Persona",
+        "type": "string"
+      },
+      "watering_holes": {
+        "title": "Watering Holes",
+        "type": "string"
+      },
+      "case_against": {
+        "title": "Case Against",
+        "type": "string"
+      },
+      "kill_criterion": {
+        "title": "Kill Criterion",
+        "type": "string"
+      },
+      "sources": {
+        "items": {
+          "$ref": "#/$defs/ResearchSource"
+        },
+        "maxItems": 50,
+        "minItems": 1,
+        "title": "Sources",
+        "type": "array"
+      },
+      "proposed_scores": {
+        "additionalProperties": {
+          "$ref": "#/$defs/ProposedScore"
+        },
+        "title": "Proposed Scores",
+        "type": "object",
+        "propertyNames": {
+          "enum": [
+            "pain_intensity",
+            "buyer_reachability",
+            "time_to_signal",
+            "budget_existence",
+            "incumbent_exposure",
+            "ai_leverage",
+            "moat_trajectory",
+            "founder_market_access",
+            "expansion_path",
+            "portfolio_synergy"
+          ]
+        }
+      }
+    },
+    "required": [
+      "workflow_map",
+      "regulatory_landscape",
+      "incumbents",
+      "budget_evidence",
+      "persona",
+      "watering_holes",
+      "case_against",
+      "kill_criterion",
+      "sources",
+      "proposed_scores"
+    ],
+    "title": "ResearchCorpus",
+    "type": "object"
+  },
+  "Candidate": {
+    "$defs": {
+      "DeliveryMode": {
+        "enum": [
+          "service_first",
+          "self_serve"
+        ],
+        "title": "DeliveryMode",
+        "type": "string"
+      },
+      "DimensionScore": {
+        "additionalProperties": false,
+        "properties": {
+          "score": {
+            "maximum": 5,
+            "minimum": 1,
+            "title": "Score",
+            "type": "integer"
+          },
+          "evidence": {
+            "default": "",
+            "title": "Evidence",
+            "type": "string"
+          }
+        },
+        "required": [
+          "score"
+        ],
+        "title": "DimensionScore",
+        "type": "object"
+      },
+      "G0Decision": {
+        "properties": {
+          "approved": {
+            "title": "Approved",
+            "type": "boolean"
+          },
+          "decided_by": {
+            "title": "Decided By",
+            "type": "string"
+          },
+          "notes": {
+            "default": "",
+            "title": "Notes",
+            "type": "string"
+          },
+          "decided_at": {
+            "format": "date-time",
+            "title": "Decided At",
+            "type": "string"
+          }
+        },
+        "required": [
+          "approved",
+          "decided_by"
+        ],
+        "title": "G0Decision",
+        "type": "object"
+      },
+      "GateThresholds": {
+        "additionalProperties": false,
+        "description": "Pre-committed G1-G3 thresholds, written at G0, never after seeing data.",
+        "properties": {
+          "g1_reachability": {
+            "default": "",
+            "title": "G1 Reachability",
+            "type": "string"
+          },
+          "g2_engagement": {
+            "default": "",
+            "title": "G2 Engagement",
+            "type": "string"
+          },
+          "g3_retention": {
+            "default": "",
+            "title": "G3 Retention",
+            "type": "string"
+          },
+          "budget_cap_usd": {
+            "default": 2000,
+            "exclusiveMinimum": 0,
+            "title": "Budget Cap Usd",
+            "type": "integer"
+          },
+          "time_cap_weeks": {
+            "default": 3,
+            "exclusiveMinimum": 0,
+            "title": "Time Cap Weeks",
+            "type": "integer"
+          }
+        },
+        "title": "GateThresholds",
+        "type": "object"
+      },
+      "Lane": {
+        "enum": [
+          "substitution",
+          "vertical"
+        ],
+        "title": "Lane",
+        "type": "string"
+      },
+      "ProposedScore": {
+        "additionalProperties": false,
+        "properties": {
+          "score": {
+            "maximum": 5,
+            "minimum": 1,
+            "title": "Score",
+            "type": "integer"
+          },
+          "evidence": {
+            "minLength": 1,
+            "pattern": "\\S",
+            "title": "Evidence",
+            "type": "string"
+          },
+          "source_ids": {
+            "items": {
+              "type": "string"
+            },
+            "minItems": 1,
+            "title": "Source Ids",
+            "type": "array"
+          },
+          "confidence": {
+            "enum": [
+              "low",
+              "medium",
+              "high"
+            ],
+            "title": "Confidence",
+            "type": "string"
+          }
+        },
+        "required": [
+          "score",
+          "evidence",
+          "source_ids",
+          "confidence"
+        ],
+        "title": "ProposedScore",
+        "type": "object"
+      },
+      "ResearchCorpus": {
+        "additionalProperties": false,
+        "properties": {
+          "workflow_map": {
+            "title": "Workflow Map",
+            "type": "string"
+          },
+          "regulatory_landscape": {
+            "title": "Regulatory Landscape",
+            "type": "string"
+          },
+          "incumbents": {
+            "title": "Incumbents",
+            "type": "string"
+          },
+          "budget_evidence": {
+            "title": "Budget Evidence",
+            "type": "string"
+          },
+          "persona": {
+            "title": "Persona",
+            "type": "string"
+          },
+          "watering_holes": {
+            "title": "Watering Holes",
+            "type": "string"
+          },
+          "case_against": {
+            "title": "Case Against",
+            "type": "string"
+          },
+          "kill_criterion": {
+            "title": "Kill Criterion",
+            "type": "string"
+          },
+          "sources": {
+            "items": {
+              "$ref": "#/$defs/ResearchSource"
+            },
+            "maxItems": 50,
+            "minItems": 1,
+            "title": "Sources",
+            "type": "array"
+          },
+          "proposed_scores": {
+            "additionalProperties": {
+              "$ref": "#/$defs/ProposedScore"
+            },
+            "title": "Proposed Scores",
+            "type": "object"
+          }
+        },
+        "required": [
+          "workflow_map",
+          "regulatory_landscape",
+          "incumbents",
+          "budget_evidence",
+          "persona",
+          "watering_holes",
+          "case_against",
+          "kill_criterion",
+          "sources",
+          "proposed_scores"
+        ],
+        "title": "ResearchCorpus",
+        "type": "object"
+      },
+      "ResearchSource": {
+        "additionalProperties": false,
+        "properties": {
+          "id": {
+            "minLength": 1,
+            "title": "Id",
+            "type": "string"
+          },
+          "url": {
+            "pattern": "^https?://[^\\s/]+(?:/[^\\s]*)?$",
+            "title": "Url",
+            "type": "string"
+          },
+          "title": {
+            "minLength": 1,
+            "title": "Title",
+            "type": "string"
+          },
+          "retrieved_at": {
+            "pattern": "^\\d{4}-\\d{2}-\\d{2}T\\d{2}:\\d{2}:\\d{2}(?:\\.\\d+)?(?:Z|[+-]\\d{2}:\\d{2})$",
+            "title": "Retrieved At",
+            "type": "string"
+          },
+          "excerpt": {
+            "minLength": 1,
+            "title": "Excerpt",
+            "type": "string"
+          }
+        },
+        "required": [
+          "id",
+          "url",
+          "title",
+          "retrieved_at",
+          "excerpt"
+        ],
+        "title": "ResearchSource",
+        "type": "object"
+      },
+      "Scorecard": {
+        "additionalProperties": false,
+        "properties": {
+          "dimensions": {
+            "additionalProperties": {
+              "$ref": "#/$defs/DimensionScore"
+            },
+            "title": "Dimensions",
+            "type": "object"
+          }
+        },
+        "title": "Scorecard",
+        "type": "object"
+      }
+    },
+    "properties": {
+      "slug": {
+        "pattern": "^[a-z0-9][a-z0-9-]*$",
+        "title": "Slug",
+        "type": "string"
+      },
+      "name": {
+        "minLength": 1,
+        "pattern": "\\S",
+        "title": "Name",
+        "type": "string"
+      },
+      "one_liner": {
+        "title": "One Liner",
+        "type": "string"
+      },
+      "lane": {
+        "$ref": "#/$defs/Lane"
+      },
+      "delivery_mode": {
+        "$ref": "#/$defs/DeliveryMode"
+      },
+      "persona": {
+        "default": "",
+        "title": "Persona",
+        "type": "string"
+      },
+      "channel": {
+        "default": "",
+        "title": "Channel",
+        "type": "string"
+      },
+      "cluster": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Cluster"
+      },
+      "cluster_exception": {
+        "default": "",
+        "title": "Cluster Exception",
+        "type": "string"
+      },
+      "operator": {
+        "anyOf": [
+          {
+            "type": "string"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null,
+        "title": "Operator"
+      },
+      "operator_exception": {
+        "default": "",
+        "title": "Operator Exception",
+        "type": "string"
+      },
+      "case_against": {
+        "default": "",
+        "title": "Case Against",
+        "type": "string"
+      },
+      "kill_criterion": {
+        "default": "",
+        "title": "Kill Criterion",
+        "type": "string"
+      },
+      "scorecard": {
+        "$ref": "#/$defs/Scorecard"
+      },
+      "thresholds": {
+        "$ref": "#/$defs/GateThresholds"
+      },
+      "memo_notes": {
+        "default": "",
+        "title": "Memo Notes",
+        "type": "string"
+      },
+      "is_demo": {
+        "default": false,
+        "title": "Is Demo",
+        "type": "boolean"
+      },
+      "research": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/ResearchCorpus"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "memo": {
+        "default": "",
+        "title": "Memo",
+        "type": "string"
+      },
+      "decision": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/G0Decision"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
+      "created_at": {
+        "format": "date-time",
+        "title": "Created At",
+        "type": "string"
+      }
+    },
+    "required": [
+      "slug",
+      "name",
+      "one_liner",
+      "lane",
+      "delivery_mode"
+    ],
+    "title": "Candidate",
+    "type": "object"
+  }
+}
