@@ -46,6 +46,7 @@ test('reviewer completes intake, editing, scoring and a deliberate G0 decision',
   await page.getByLabel('G1 · Reachability').fill('3% qualified replies');
   await page.getByLabel('G2 · Engagement').fill('3 paid engagements');
   await page.getByLabel('G3 · Retention').fill('1 repeat order');
+  await page.getByRole('button',{name:'Fill example plan for review',exact:true}).click();
   await page.getByRole('button',{name:'Save thresholds',exact:true}).click();
   await page.getByText('Saved',{exact:true}).waitFor();
   await page.getByLabel('Reviewer commentary').fill('Reviewed the evidence and economics');
@@ -56,6 +57,7 @@ test('reviewer completes intake, editing, scoring and a deliberate G0 decision',
   await page.getByRole('button',{name:'Cancel',exact:true}).click();
   record=await (await page.request.get(`http://127.0.0.1:${port}/api/candidates/field-service`)).json();
   assert.equal(record.decision,null,'Cancel approval must not decide');
+  assert.equal(record.thresholds.execution_plan.g1.targets.visitors,20);
   await page.getByRole('button',{name:'Approve G0',exact:true}).click();
   await page.getByLabel('Decision rationale').fill('Thresholds set; proceed with bounded experiment');
   await page.getByRole('button',{name:'Confirm approval',exact:true}).click();

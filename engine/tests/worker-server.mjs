@@ -2,10 +2,14 @@
 import {createServer} from 'node:http';
 import {readFileSync} from 'node:fs';
 import {createHash} from 'node:crypto';
-import worker from '../../.build/worker-test.mjs';
+import worker,{OperationsStore} from '../../.build/worker-test.mjs';
 const values=new Map();
 const kv={get:async k=>values.get(k)??null,put:async(k,v)=>values.set(k,v),list:async({prefix})=>({keys:[...values.keys()].filter(k=>k.startsWith(prefix)).sort().map(name=>({name})),list_complete:true})};
 const env={GANTRY_KV:kv,GANTRY_SECRET:'test-session-secret',GANTRY_ACCESS_KEY_HASHES:JSON.stringify({'tester@example.com':createHash('sha256').update('test-key').digest('hex')})};
+const operationsValues=new Map();let tail=Promise.resolve();
+const storage={get:async k=>structuredClone(operationsValues.get(k)),put:async(k,v)=>operationsValues.set(k,structuredClone(v))};
+storage.transaction=fn=>{const work=tail.then(()=>fn(storage));tail=work.catch(()=>{});return work;};
+const ops=new OperationsStore({storage});env.GANTRY_OPERATIONS={idFromName:x=>x,get:()=>ops};
 const corpusPath=process.env.TEST_RESEARCH_CORPUS;
 if(corpusPath){env.GANTRY_RESEARCH_URL='https://research.test/run';globalThis.fetch=async()=>new Response(readFileSync(corpusPath,'utf8'),{status:200});}
 await kv.put('seeded','test');await kv.put('allowed',JSON.stringify(['tester@example.com']));await kv.put('clusters','[]');await kv.put('operators','[]');

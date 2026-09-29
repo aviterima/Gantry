@@ -29,6 +29,7 @@ jobs:
           node scripts/build-validators.mjs
       - run: python -m pytest engine/tests -q
       - run: npx playwright install --with-deps chromium
+      - run: npm run test:operations
       - run: npm run test:ui
       - name: Build Worker without deploying
         run: npm run build:worker

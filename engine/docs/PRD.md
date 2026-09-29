@@ -1,4 +1,4 @@
-# PRD — Selection Engine v0.3
+# PRD — Gantry testing release v0.4
 
 Owner: Armando Viteri. Status: implementation branch, business acceptance open.
 
@@ -21,6 +21,21 @@ Business: 10 real candidates, >=8 signed go/no-go decisions within two days.
 Live research: a configured provider produces useful source-grounded proposals
 from a one-liner; reviewer validates quality, cost and coverage. Not yet evidenced.
 
+## Operations testing scope
+The reviewer creates tournaments, schedules reviews, prepares G0-approved launches,
+records readiness evidence and activates sandbox/CSV experiments. Numeric G1–G3
+plans must have been saved before G0. The operations engine consumes deduplicated
+signals, computes gate metrics and caps, and queues human decisions. G2 pass opens
+concentration; kill opens wind-down and retains learnings; G3 pass opens promotion
+and handoff. Contact reservations and suppression apply across launches. Portfolio,
+channel costs, audit history and downloadable handoffs are visible in Mission Control.
+
+ADR-0004 defines exact semantics and persistence. Tests run through both runtimes
+and through the browser. The local launcher preserves its isolated sandbox across
+restarts. Detailed coverage and exclusions are in `reviews/v0.4-testing-release.md`.
+
 ## Excluded from this release
-Launch stack, outbound integrations, Signal store, G1–G4 automation, spinouts,
-operator recruitment, equity terms, production deployment and multi-reviewer use.
+Live outbound/social/CRM adapters and independent verification of imported evidence;
+public landing deployment, real payment/booking, legal spinouts and equity execution;
+automated discovery, live cluster listening/health and background notification jobs;
+production deployment and concurrent editing of the selection registry.

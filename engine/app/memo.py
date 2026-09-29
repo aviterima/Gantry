@@ -8,6 +8,8 @@ plugs in later.
 
 from __future__ import annotations
 
+import json
+
 from .models import DIMENSIONS, GATING_DIMENSIONS, Candidate
 
 LANE_LABELS = {
@@ -71,6 +73,11 @@ def draft_memo(candidate: Candidate) -> str:
         f"- **G2 engagement:** {candidate.thresholds.g2_engagement or '_not set_'}",
         f"- **G3 retention:** {candidate.thresholds.g3_retention or '_not set_'}",
         f"- **Caps:** ${candidate.thresholds.budget_cap_usd:,} / {candidate.thresholds.time_cap_weeks} weeks",
+        "",
+        "## Structured execution plan",
+        json.dumps(candidate.thresholds.execution_plan.model_dump(), indent=2)
+        if candidate.thresholds.execution_plan
+        else "_Not recorded; candidate cannot enter the launch engine._",
         "",
         "## Reviewer commentary",
         "",

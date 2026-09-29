@@ -8,7 +8,7 @@ from __future__ import annotations
 
 from datetime import datetime, timezone
 from enum import Enum
-from typing import Literal, Optional
+from typing import Annotated, Literal, Optional
 
 from pydantic import BaseModel, ConfigDict, Field, field_validator, model_validator
 
@@ -111,9 +111,22 @@ class Scorecard(StrictModel):
         return None
 
 
+class ExecutionGate(StrictModel):
+    days: int = Field(gt=0, le=90, strict=True)
+    budget_cents: int = Field(gt=0, strict=True)
+    targets: dict[str, Annotated[float, Field(strict=True, gt=0)]] = Field(min_length=1)
+
+
+class ExecutionPlan(StrictModel):
+    g1: ExecutionGate
+    g2: ExecutionGate
+    g3: ExecutionGate
+
+
 class GateThresholds(StrictModel):
     """Pre-committed G1-G3 thresholds, written at G0, never after seeing data."""
 
+    execution_plan: Optional[ExecutionPlan] = None
     g1_reachability: str = ""
     g2_engagement: str = ""
     g3_retention: str = ""

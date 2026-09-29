@@ -17,6 +17,9 @@
  * enables magic links (Phase 2).
  */
 
+import {validatePlan} from "../../../engine/operations/kernel.mjs";
+import operationsHtml from "../../../engine/static/operations.html";
+export {OperationsStore} from "./operations.js";
 import appHtml from "../../../engine/static/index.html";
 import loginHtml from "../../../engine/static/login.html";
 import seed from "./seed.json";
@@ -122,7 +125,7 @@ function draftMemo(c) {
     `- **G2 engagement:** ${t.g2_engagement || "_not set_"}`,
     `- **G3 retention:** ${t.g3_retention || "_not set_"}`,
     `- **Caps:** $${(t.budget_cap_usd || 0).toLocaleString("en-US")} / ${t.time_cap_weeks || 0} weeks`,
-    "", "## Reviewer commentary", "", c.memo_notes || "_No additional commentary._", "", "## Decision", "");
+    "", "## Structured execution plan", t.execution_plan?JSON.stringify(t.execution_plan,null,2):"_Not recorded; candidate cannot enter the launch engine._", "", "## Reviewer commentary", "", c.memo_notes || "_No additional commentary._", "", "## Decision", "");
   lines.push(c.decision
     ? `**${c.decision.approved ? "APPROVED" : "REJECTED"}** by ${c.decision.decided_by} — ${c.decision.notes || "no notes"}`
     : "_Pending G0 review._");
@@ -274,6 +277,15 @@ async function route(request, env) {
   }
   const email=await verifyCookie(env,kv,request.headers.get("Cookie"));
   if(!email) return path.startsWith("/api/") ? err(401,"authentication required") : Response.redirect(new URL("/login",url).toString(),307);
+  if(path==="/operations" && method==="GET")return html(operationsHtml);
+  if(path==="/api/operations" || path.startsWith("/api/operations/handoff/") || path.startsWith("/launch-preview/")){
+    if(!env.GANTRY_OPERATIONS)return err(503,"Operations storage is not configured");
+    if(!["GET","POST"].includes(method))return err(405,"Method not allowed");
+    let command;
+    if(method==="POST"){if(path!=="/api/operations")return err(405,"Method not allowed");const raw=await request.text();if(raw.length>512000)return err(413,"Command too large");try{command=JSON.parse(raw);if(!command||typeof command!=="object"||Array.isArray(command))return err(422,"Invalid command");}catch{return err(422,"Invalid JSON");}}
+    const payload={command,context:{actor:email,now:new Date().toISOString(),candidates:command?.action==="launch.create"?await store.candidates(kv):[]},handoff:path.startsWith("/api/operations/handoff/")?path.split('/').pop():null,preview:path.startsWith("/launch-preview/")?path.split('/').pop():null};
+    return env.GANTRY_OPERATIONS.get(env.GANTRY_OPERATIONS.idFromName('studio')).fetch(new Request('https://operations.internal/',{method:'POST',body:JSON.stringify(payload)}));
+  }
   const clusters=await store.getList(kv,"clusters"), operators=await store.getList(kv,"operators");
   const refs=c=>[...(c.cluster&&!clusters.some(x=>x.slug===c.cluster)?["unknown cluster"]:[]),
     ...(c.operator&&!operators.some(x=>x.slug===c.operator)?["unknown operator"]:[])];
@@ -314,12 +326,13 @@ async function route(request, env) {
       return save({...c,...b});
     }
     if(action==="score" && method==="POST") {c.scorecard=await body("ScoreIn");return save(c);}
-    if(action==="thresholds" && method==="POST") {c.thresholds=await body("GateThresholds");return save(c);}
+    if(action==="thresholds" && method==="POST") {const t=await body("GateThresholds");if(t.execution_plan)validatePlan(t.execution_plan,c.delivery_mode,t);c.thresholds=t;return save(c);}
     if(action==="case" && method==="POST") {Object.assign(c,await body("CaseIn"));return save(c);}
     if(action==="memo" && method==="PUT") {Object.assign(c,await body("MemoIn"));return save(c);}
     if(action==="memo" && method==="POST") {await save(c);return json({memo:c.memo});}
     if(action==="decision" && method==="POST") {
       const b=await body("DecisionIn"), bl=output(c).blockers;
+      if(b.approved && c.thresholds.execution_plan)validatePlan(c.thresholds.execution_plan,c.delivery_mode,c.thresholds);
       if(b.approved && bl.length) return err(422,"cannot approve: "+bl.join("; "));
       c.decision={...b,decided_by:email,decided_at:new Date().toISOString()};return save(c);
     }

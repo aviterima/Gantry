@@ -1,9 +1,13 @@
-# Gantry Selection Engine v0.3
+# Gantry v0.4 testing release
 
 Mission Control supports candidate intake, declaration editing, evidence scoring,
 thresholds, reviewer commentary, cluster/operator creation, and deliberate G0
 approval/rejection. Research produces a separately reviewed corpus and proposals.
 See `docs/adr/0003-selection-v03.md` for exact rules and debt.
+
+For the isolated end-to-end sandbox, use `../TESTING.md` and the root launch scripts.
+Launch operations share a JavaScript kernel between FastAPI/SQLite and the Worker/
+Durable Object. Node 22+ is required at runtime for FastAPI operations.
 
 ## Run locally
 
@@ -51,6 +55,7 @@ python -m engine.export_contract
 node scripts/build-validators.mjs
 python -m pytest engine/tests -q
 npx playwright install chromium
+npm run test:operations
 npm run test:ui
 npm run build:worker
 ```
@@ -96,11 +101,15 @@ coverage, latency and cost before accepting the research feature for operations.
 
 ## Remaining limitations
 
-- Single-reviewer operation only: file and KV stores have no atomic multi-writer
-  decision transaction. Repay before a second simultaneous reviewer.
-- Text thresholds and overall caps are for manual reviews; structured per-gate
-  metrics arrive with the Signal engine.
-- Research provenance is retained, but no freshness/rot scheduler is implemented.
-- Full append-only audit history, operator equity grants and launch integrations
-  are not implemented.
+- Selection files/KV remain single-reviewer; lifecycle operations are transactional
+  with revision checks. Operations use a capped 1.8 MB state document; normalize
+  storage before production-scale event volumes.
+- Research remains account-configured and has no freshness scheduler.
+- Email/social/CRM connections are unverified; imported events are reviewer-supplied.
+- Dates and queues are evaluated when viewed; no background notification jobs run.
+- Handoffs include a landing scaffold and staged CRM, not a complete venture product
+  or verified provider export. Legal/operator agreements remain external actions.
 - Business acceptance remains 10 real candidates and >=8 decisions within two days.
+
+See `docs/adr/0004-testing-release.md` for operations and `../TESTING.md` for the
+walkthrough, local launchers and current integration boundary.

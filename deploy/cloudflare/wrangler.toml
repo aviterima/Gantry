@@ -16,3 +16,12 @@ fallthrough = false
 
 # Secrets (set once, not stored here):
 #   npx wrangler secret put GANTRY_SECRET   # any long random string
+
+
+[[durable_objects.bindings]]
+name = "GANTRY_OPERATIONS"
+class_name = "OperationsStore"
+
+[[migrations]]
+tag = "operations-v1"
+new_sqlite_classes = ["OperationsStore"]

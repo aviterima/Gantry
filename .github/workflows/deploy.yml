@@ -28,6 +28,7 @@ jobs:
       - run: python -m mypy
       - run: python -m pytest engine/tests -q
       - run: npx playwright install --with-deps chromium
+      - run: npm run test:operations
       - run: npm run test:ui
       - name: Deploy
         run: ./deploy/cloudflare/deploy.sh

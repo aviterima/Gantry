@@ -15,9 +15,9 @@ import re
 from pathlib import Path
 
 from fastapi import FastAPI, HTTPException, Request
-from fastapi.responses import FileResponse, JSONResponse, RedirectResponse
+from fastapi.responses import FileResponse, JSONResponse, RedirectResponse, Response
 
-from . import auth, research
+from . import auth, operations, research
 from .memo import draft_memo
 from .models import (
     Candidate,
@@ -224,6 +224,10 @@ def set_thresholds(slug: str, body: GateThresholds):
     if c.decision is not None:
         # Mission Control enforces the no-moved-goalposts rule (ENGINE-SPEC).
         raise HTTPException(409, "thresholds are locked at G0; use the extension-memo flow")
+    if body.execution_plan:
+        operations.validate_plan(
+            body.execution_plan.model_dump(), c.delivery_mode.value, body.model_dump()
+        )
     c.thresholds = body
     c.memo = draft_memo(c)
     registry.save_candidate(c)
@@ -270,6 +274,12 @@ def decide(slug: str, body: DecisionIn, request: Request):
     blockers = approval_blockers(c)
     if body.approved and blockers:
         raise HTTPException(422, "cannot approve: " + "; ".join(blockers))
+    if body.approved and c.thresholds.execution_plan:
+        operations.validate_plan(
+            c.thresholds.execution_plan.model_dump(),
+            c.delivery_mode.value,
+            c.thresholds.model_dump(),
+        )
     c.decision = G0Decision(
         approved=body.approved, notes=body.notes, decided_by=request.state.email
     )
@@ -383,3 +393,57 @@ def accept_research(slug: str):
     c.memo = draft_memo(c)
     registry.save_candidate(c)
     return candidate_view(c)
+
+
+@app.get("/operations", include_in_schema=False)
+def operations_page():
+    return FileResponse(STATIC_DIR / "operations.html")
+
+
+@app.get("/api/operations")
+def operations_view(request: Request):
+    return operations.execute(DATA_DIR, request.state.email, [])
+
+
+@app.post("/api/operations")
+async def operations_command(request: Request):
+    if len(await request.body()) > 512000:
+        raise HTTPException(413, "Command too large")
+    try:
+        body = await request.json()
+    except ValueError:
+        raise HTTPException(422, "Invalid JSON") from None
+    if not isinstance(body, dict):
+        raise HTTPException(422, "Invalid command")
+    candidates = [c.model_dump(mode="json") for c in registry.list_candidates()]
+    return operations.execute(DATA_DIR, request.state.email, candidates, command=body)
+
+
+@app.get("/api/operations/handoff/{slug}")
+def operations_handoff(slug: str, request: Request):
+    package = operations.execute(DATA_DIR, request.state.email, [], handoff=slug)
+    return Response(
+        operations.archive(package),
+        media_type="application/zip",
+        headers={
+            "Content-Disposition": f'attachment; filename="{package["launch"]["id"]}-handoff.zip"'
+        },
+    )
+
+
+@app.get("/launch-preview/{slug}", include_in_schema=False)
+def launch_preview(slug: str, request: Request):
+    import json
+    import subprocess
+
+    package = operations.execute(DATA_DIR, request.state.email, [], handoff=slug)
+    package["preview"] = True
+    rendered = subprocess.run(
+        ["node", str(REPO_ROOT / "engine/operations/factory-cli.mjs")],
+        input=json.dumps(package),
+        text=True,
+        capture_output=True,
+        timeout=15,
+        check=True,
+    )
+    return Response(rendered.stdout, media_type="text/html")

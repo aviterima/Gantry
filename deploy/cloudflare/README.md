@@ -33,10 +33,19 @@ successful one. The latest (September 8, run 34260303414) failed at **Check for
 Cloudflare token**, before checkout or deployment. A separate manual deployment
 is not ruled out. No live Worker URL has been verified. This build was not deployed.
 
+## Operations storage
+
+The v0.4 Worker adds the `OperationsStore` SQLite-backed Durable Object using the
+`operations-v1` migration. It stores a capped JSON state inside transactions and
+requires matching revisions for writes. This does not migrate or rewrite existing
+KV candidate records. Review the new binding/migration before an authorized deploy.
+Both runtimes share `engine/operations/kernel.mjs`; FastAPI uses Node + SQLite.
+
 ## Debt
 
 KV is eventually consistent, not a transactional store. Use one reviewer only;
-move state to a transactional service before simultaneous reviewers. Contract tests
+move selection state to a transactional service before simultaneous reviewers.
+Operations state already uses a Durable Object transaction; selection remains KV. Contract tests
 exercise the Worker with deterministic KV, and do not model cross-edge races.
 Any existing KV records lacking `is_demo` require owner review before classifying
 them; no operational records are automatically relabeled by slug.

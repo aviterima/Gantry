@@ -247,9 +247,75 @@
     "type": "object"
   },
   "GateThresholds": {
+    "$defs": {
+      "ExecutionGate": {
+        "additionalProperties": false,
+        "properties": {
+          "days": {
+            "exclusiveMinimum": 0,
+            "maximum": 90,
+            "title": "Days",
+            "type": "integer"
+          },
+          "budget_cents": {
+            "exclusiveMinimum": 0,
+            "title": "Budget Cents",
+            "type": "integer"
+          },
+          "targets": {
+            "additionalProperties": {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            "minProperties": 1,
+            "title": "Targets",
+            "type": "object"
+          }
+        },
+        "required": [
+          "days",
+          "budget_cents",
+          "targets"
+        ],
+        "title": "ExecutionGate",
+        "type": "object"
+      },
+      "ExecutionPlan": {
+        "additionalProperties": false,
+        "properties": {
+          "g1": {
+            "$ref": "#/$defs/ExecutionGate"
+          },
+          "g2": {
+            "$ref": "#/$defs/ExecutionGate"
+          },
+          "g3": {
+            "$ref": "#/$defs/ExecutionGate"
+          }
+        },
+        "required": [
+          "g1",
+          "g2",
+          "g3"
+        ],
+        "title": "ExecutionPlan",
+        "type": "object"
+      }
+    },
     "additionalProperties": false,
     "description": "Pre-committed G1-G3 thresholds, written at G0, never after seeing data.",
     "properties": {
+      "execution_plan": {
+        "anyOf": [
+          {
+            "$ref": "#/$defs/ExecutionPlan"
+          },
+          {
+            "type": "null"
+          }
+        ],
+        "default": null
+      },
       "g1_reachability": {
         "default": "",
         "title": "G1 Reachability",
@@ -549,6 +615,59 @@
         "title": "DimensionScore",
         "type": "object"
       },
+      "ExecutionGate": {
+        "additionalProperties": false,
+        "properties": {
+          "days": {
+            "exclusiveMinimum": 0,
+            "maximum": 90,
+            "title": "Days",
+            "type": "integer"
+          },
+          "budget_cents": {
+            "exclusiveMinimum": 0,
+            "title": "Budget Cents",
+            "type": "integer"
+          },
+          "targets": {
+            "additionalProperties": {
+              "exclusiveMinimum": 0,
+              "type": "number"
+            },
+            "minProperties": 1,
+            "title": "Targets",
+            "type": "object"
+          }
+        },
+        "required": [
+          "days",
+          "budget_cents",
+          "targets"
+        ],
+        "title": "ExecutionGate",
+        "type": "object"
+      },
+      "ExecutionPlan": {
+        "additionalProperties": false,
+        "properties": {
+          "g1": {
+            "$ref": "#/$defs/ExecutionGate"
+          },
+          "g2": {
+            "$ref": "#/$defs/ExecutionGate"
+          },
+          "g3": {
+            "$ref": "#/$defs/ExecutionGate"
+          }
+        },
+        "required": [
+          "g1",
+          "g2",
+          "g3"
+        ],
+        "title": "ExecutionPlan",
+        "type": "object"
+      },
       "G0Decision": {
         "properties": {
           "approved": {
@@ -581,6 +700,17 @@
         "additionalProperties": false,
         "description": "Pre-committed G1-G3 thresholds, written at G0, never after seeing data.",
         "properties": {
+          "execution_plan": {
+            "anyOf": [
+              {
+                "$ref": "#/$defs/ExecutionPlan"
+              },
+              {
+                "type": "null"
+              }
+            ],
+            "default": null
+          },
           "g1_reachability": {
             "default": "",
             "title": "G1 Reachability",
