@@ -39,3 +39,19 @@ jobs:
         run: GANTRY_DATA_DIR=/tmp/gantry-ci-data python -m engine.seed
       - name: Reject committed bytecode
         run: test -z "$(git ls-files '*.pyc')"
+
+  windows-startup:
+    runs-on: windows-latest
+    env:
+      PYTHONUTF8: "0"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: python -m pip install -r requirements.txt
+      - name: Test native Windows encoding, recovery and startup
+        run: python -m pytest engine/tests/test_windows_startup.py -q

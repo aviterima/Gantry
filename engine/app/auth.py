@@ -19,6 +19,8 @@ from pathlib import Path
 
 import yaml
 
+from .textio import read_text, write_text
+
 COOKIE_NAME = "gantry_session"
 SESSION_TTL_SECONDS = 30 * 24 * 3600  # 30 days
 
@@ -33,22 +35,22 @@ def _secret(data_dir: Path) -> bytes:
     path = data_dir / SECRET_FILE
     if not path.exists():
         data_dir.mkdir(parents=True, exist_ok=True)
-        path.write_text(secrets.token_hex(32))
-    return path.read_text().strip().encode()
+        write_text(path, secrets.token_hex(32))
+    return read_text(path).strip().encode()
 
 
 def load_allowed(data_dir: Path) -> list[str]:
     path = data_dir / ALLOWED_FILE
     if not path.exists():
         return []
-    emails = yaml.safe_load(path.read_text()) or []
+    emails = yaml.safe_load(read_text(path)) or []
     return [e.strip().lower() for e in emails if isinstance(e, str) and e.strip()]
 
 
 def save_allowed(data_dir: Path, emails: list[str]) -> None:
     data_dir.mkdir(parents=True, exist_ok=True)
     deduped = sorted({e.strip().lower() for e in emails if e.strip()})
-    (data_dir / ALLOWED_FILE).write_text(yaml.safe_dump(deduped))
+    write_text(data_dir / ALLOWED_FILE, yaml.safe_dump(deduped))
 
 
 def is_allowed(data_dir: Path, email: str) -> bool:

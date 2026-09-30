@@ -36,5 +36,7 @@ def export():
 
 if __name__ == "__main__":
     path = Path(__file__).resolve().parents[1] / "deploy/cloudflare/src/contracts.json"
-    path.write_text(export())
-    (path.parent / "dimensions.json").write_text(json.dumps(DIMENSIONS, indent=2) + "\n")
+    path.write_text(export(), encoding="utf-8")
+    (path.parent / "dimensions.json").write_text(
+        json.dumps(DIMENSIONS, indent=2) + "\n", encoding="utf-8"
+    )

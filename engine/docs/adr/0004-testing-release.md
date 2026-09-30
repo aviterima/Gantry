@@ -91,3 +91,14 @@ tasks surface on load. No production deploy or merge is part of this build.
 
 Storage sizing reference: https://developers.cloudflare.com/durable-objects/platform/limits/
 The state is stored as JSON text below the SQLite-backed per-value limit.
+
+
+## Windows persistence correction — 2026-09-30
+
+v0.4.1 defines UTF-8 for registry writes, generated contracts and Python/Node
+subprocess streams. Registry reads accept UTF-8 (including BOM) and legacy CP1252.
+Atomic file replacement prevents encoding failures from truncating existing records.
+The test initializer restores missing or empty known demo fixtures, backing up empty
+files, and never overwrites nonempty records. Native Windows CI exercises startup,
+legacy encoding, Unicode persistence and operations. Production data is not repaired
+or reseeded by this testing-only recovery path.

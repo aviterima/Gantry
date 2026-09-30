@@ -442,6 +442,7 @@ def launch_preview(slug: str, request: Request):
         ["node", str(REPO_ROOT / "engine/operations/factory-cli.mjs")],
         input=json.dumps(package),
         text=True,
+        encoding="utf-8",
         capture_output=True,
         timeout=15,
         check=True,

@@ -105,3 +105,22 @@ operations document with normalized event tables before production-scale use.
 Selection itself remains a single-reviewer file/KV workflow; operations writes are
 transactional. No production deployment or existing data migration is performed by
 this test launcher.
+
+
+## Windows startup repair (v0.4.1)
+
+The earlier build could fail under the Windows CP1252 default with a
+UnicodeEncodeError while writing symbols such as >= (the Unicode greater-than-or-equal
+symbol). Text persistence now writes UTF-8 explicitly and reads legacy CP1252
+registry files. Registry writes use a completed temporary file before replacement.
+Python/Node subprocess streams explicitly use UTF-8, and the Windows launcher
+also enables Python UTF-8 mode.
+
+A failed initial seed may have left an empty candidate.yaml. Startup repairs only
+missing or zero-byte known demo fixtures in the selected testing directory. Empty
+files are renamed to uniquely named .bak files first. Nonempty candidate records,
+existing clusters/operators, credentials and operations history are preserved.
+
+To update an existing installation, extract the corrected release over the existing
+Gantry folder and replace the program files. Keep .testing-data and .venv. Then run
+Start-Gantry.cmd again. Alternatively use a fresh extracted folder for a new sandbox.

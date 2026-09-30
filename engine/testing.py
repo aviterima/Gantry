@@ -20,28 +20,25 @@ def initialize(path: Path):
     path.mkdir(parents=True, exist_ok=True)
     credential_file = path / "reviewer-key.json"
     if credential_file.exists():
-        credentials = json.loads(credential_file.read_text())
+        credentials = json.loads(credential_file.read_text(encoding="utf-8"))
     else:
         credentials = {"email": "tester@example.test", "key": secrets.token_urlsafe(24)}
-        credential_file.write_text(json.dumps(credentials))
+        credential_file.write_text(json.dumps(credentials), encoding="utf-8")
         try:
             credential_file.chmod(0o600)
         except OSError:
             pass
     auth.save_allowed(path, [credentials["email"]])
     registry = Registry(path)
-    if not registry.list_candidates():
+    if not (path / "clusters.yaml").exists():
         registry.save_clusters(CLUSTERS)
+    if not (path / "operators.yaml").exists():
         registry.save_operators(OPERATORS)
-        for candidate in build_candidates():
-            registry.save_candidate(candidate)
-    existing = {c.slug for c in registry.list_candidates()}
+    examples = build_candidates()
     for mode, slug, name in [
         ("service_first", "sandbox-service", "Sandbox · Contractor estimating"),
         ("self_serve", "sandbox-product", "Sandbox · Project checklist"),
     ]:
-        if slug in existing:
-            continue
         from engine.app.models import DIMENSIONS
 
         gate2 = (
@@ -92,14 +89,22 @@ def initialize(path: Path):
             decided_by="sandbox-fixture",
             notes="Synthetic approval for testing only; not an owner decision",
         )
-        registry.save_candidate(c)
+        examples.append(c)
+    for candidate in examples:
+        target = path / "candidates" / candidate.slug / "candidate.yaml"
+        if target.exists() and target.stat().st_size:
+            continue  # Never replace a nonempty record, including edited examples.
+        if target.exists():
+            backup = target.with_name("candidate.yaml.empty-" + secrets.token_hex(6) + ".bak")
+            target.rename(backup)
+        registry.save_candidate(candidate)
     return credentials
 
 
 def main():
     if not shutil.which("node"):
         raise SystemExit("Install Node.js 22 or later, then run again.")
-    version = subprocess.check_output(["node", "--version"], text=True).strip()
+    version = subprocess.check_output(["node", "--version"], text=True, encoding="utf-8").strip()
     if int(version.lstrip("v").split(".")[0]) < 22:
         raise SystemExit("Node.js 22 or later is required.")
     root = Path(__file__).resolve().parents[1]
