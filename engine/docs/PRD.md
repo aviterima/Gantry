@@ -1,27 +1,41 @@
-# PRD — Phase 1 Selection Engine
+# PRD — Gantry testing release v0.4
 
-Derived from `ENGINE-SPEC.md` Phase 1. Goal: any idea goes from raw thesis to a
-scored, evidenced go/no-go decision in ≤ 2 days of human attention.
+Owner: Armando Viteri. Status: implementation branch, business acceptance open.
 
-## Users
-Studio reviewers (score, review, decide) and candidate authors (intake, memo prep).
+A reviewer can create an idea, set delivery mode and audience/operator assignment,
+enter scores and evidence, set positive budget/time caps, edit memo commentary,
+and approve or reject from Mission Control. Configuration can add clusters and
+operators. The registry labels demonstration data and incomplete scores clearly.
 
-## In scope (Phase 1)
-1. Candidate registry, repo-backed (`data/candidates/<slug>/`).
-2. Scorecard as code: 10 FRAMEWORK §3 dimensions; gating on buyer_reachability
-   and time_to_signal (score ≥ 3 + evidence) enforced server-side.
-3. G0 memo drafts generated from scorecard + declarations; human edits and signs.
-4. G0 approval queue with decidability blockers surfaced; approvals blocked
-   until every blocker clears; rejections always allowed.
-5. Cluster and operator-bench registries (read/add).
-6. Mission Control shell: summary tiles, G0 Queue, Registry with scorecard and
-   threshold editing, Configuration pane.
+ADR-0003 defines the server-side contract and known debt. In particular approval
+requires >=35/50, passing evidence-backed gates and complete valid declarations.
+Research is optional: review the cited corpus and deliberately accept proposed
+scores. Unconfigured research is shown as unavailable, never simulated as live.
+Access requires an allowlisted email plus an independently provisioned access key.
 
-## Out of scope (later phases)
-Adapters (Neubloc/Vox/Forum), Signal store, launch stack, AI research pipeline
-(Phase 1 ships the memo seam it plugs into), auth/roles, audit log persistence.
+## Acceptance
+Automated: shared route contract against Python and Worker, authentication and
+revocation tests, malformed-input tests, decision locks, research failure and
+citation tests, UI cancellation and intake checks, lint/format/type checks.
+Business: 10 real candidates, >=8 signed go/no-go decisions within two days.
+Live research: a configured provider produces useful source-grounded proposals
+from a one-liner; reviewer validates quality, cost and coverage. Not yet evidenced.
 
-## Acceptance (from ENGINE-SPEC)
-10 real candidates through the flow; ≥ 8 signed G0 decisions inside the 2-day
-cap; gating dimensions carry evidence; every signed memo declares delivery
-mode, cluster, and operator match or a written exception.
+## Operations testing scope
+The reviewer creates tournaments, schedules reviews, prepares G0-approved launches,
+records readiness evidence and activates sandbox/CSV experiments. Numeric G1–G3
+plans must have been saved before G0. The operations engine consumes deduplicated
+signals, computes gate metrics and caps, and queues human decisions. G2 pass opens
+concentration; kill opens wind-down and retains learnings; G3 pass opens promotion
+and handoff. Contact reservations and suppression apply across launches. Portfolio,
+channel costs, audit history and downloadable handoffs are visible in Mission Control.
+
+ADR-0004 defines exact semantics and persistence. Tests run through both runtimes
+and through the browser. The local launcher preserves its isolated sandbox across
+restarts. Detailed coverage and exclusions are in `reviews/v0.4-testing-release.md`.
+
+## Excluded from this release
+Live outbound/social/CRM adapters and independent verification of imported evidence;
+public landing deployment, real payment/booking, legal spinouts and equity execution;
+automated discovery, live cluster listening/health and background notification jobs;
+production deployment and concurrent editing of the selection registry.

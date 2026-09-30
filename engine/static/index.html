@@ -1,341 +1,95 @@
 <!doctype html>
 <html lang="en">
-<head>
-<meta charset="utf-8">
-<meta name="viewport" content="width=device-width, initial-scale=1">
-<title>Gantry Mission Control</title>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Gantry · Mission Control</title>
 <style>
-  :root{
-    --bg:#0e1116; --panel:#161b23; --panel2:#1d242f; --line:#2a3341;
-    --text:#e6ebf2; --muted:#8b98aa; --accent:#4da3ff; --good:#3ecf8e;
-    --warn:#f5b83d; --bad:#f2635d; --chip:#232c39;
-  }
-  *{box-sizing:border-box}
-  body{margin:0;background:var(--bg);color:var(--text);
-    font:14px/1.5 -apple-system,BlinkMacSystemFont,"Segoe UI",Roboto,sans-serif}
-  header{display:flex;align-items:baseline;gap:14px;padding:18px 28px;border-bottom:1px solid var(--line)}
-  header h1{font-size:17px;margin:0;letter-spacing:.4px}
-  header .sub{color:var(--muted);font-size:12.5px}
-  .wrap{max-width:1180px;margin:0 auto;padding:20px 28px 60px}
-  .tiles{display:grid;grid-template-columns:repeat(auto-fit,minmax(140px,1fr));gap:12px;margin-bottom:22px}
-  .tile{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:12px 14px}
-  .tile .num{font-size:24px;font-weight:650}
-  .tile .lbl{color:var(--muted);font-size:12px;margin-top:2px}
-  nav.tabs{display:flex;gap:6px;margin-bottom:18px;border-bottom:1px solid var(--line)}
-  nav.tabs button{background:none;border:none;color:var(--muted);font:inherit;font-weight:600;
-    padding:9px 14px;cursor:pointer;border-bottom:2px solid transparent}
-  nav.tabs button.active{color:var(--text);border-bottom-color:var(--accent)}
-  .card{background:var(--panel);border:1px solid var(--line);border-radius:10px;padding:16px 18px;margin-bottom:14px}
-  .card h3{margin:0 0 4px;font-size:15px}
-  .row{display:flex;gap:10px;flex-wrap:wrap;align-items:center}
-  .chip{background:var(--chip);border-radius:999px;padding:2px 10px;font-size:11.5px;color:var(--muted)}
-  .chip.b{color:var(--text)}
-  .st{font-size:11px;font-weight:700;letter-spacing:.5px;text-transform:uppercase;
-    border-radius:5px;padding:2px 8px}
-  .st.scored{background:#153a5e;color:var(--accent)}
-  .st.draft{background:#333c49;color:var(--muted)}
-  .st.untestable{background:#4a2320;color:var(--bad)}
-  .st.g0_approved{background:#173d2e;color:var(--good)}
-  .st.g0_rejected{background:#3c3220;color:var(--warn)}
-  .band{font-size:10.5px;font-weight:700;letter-spacing:.5px;border-radius:5px;padding:3px 8px;white-space:nowrap}
-  .band.strong{background:#173d2e;color:var(--good)}
-  .band.credible{background:#153a5e;color:var(--accent)}
-  .band.conditional{background:#3c3220;color:var(--warn)}
-  .band.weak{background:#33261d;color:#d99a6c}
-  .band.not_this_one{background:#4a2320;color:var(--bad)}
-  button.act{background:var(--accent);color:#08131f;border:none;border-radius:7px;
-    padding:7px 14px;font:inherit;font-weight:650;cursor:pointer}
-  button.act.sec{background:var(--panel2);color:var(--text);border:1px solid var(--line)}
-  button.act.danger{background:var(--bad);color:#1c0908}
-  button.act:disabled{opacity:.4;cursor:not-allowed}
-  table{width:100%;border-collapse:collapse}
-  th,td{text-align:left;padding:8px 10px;border-bottom:1px solid var(--line);vertical-align:top}
-  th{color:var(--muted);font-size:12px;text-transform:uppercase;letter-spacing:.4px}
-  tr.click{cursor:pointer}
-  tr.click:hover td{background:var(--panel2)}
-  .muted{color:var(--muted)}
-  .blockers{color:var(--warn);font-size:12.5px;margin-top:6px}
-  .memo{background:var(--panel2);border:1px solid var(--line);border-radius:8px;
-    padding:14px;white-space:pre-wrap;font:12.5px/1.55 ui-monospace,SFMono-Regular,Menlo,monospace;
-    max-height:420px;overflow:auto}
-  input,select,textarea{background:var(--panel2);border:1px solid var(--line);color:var(--text);
-    border-radius:7px;padding:7px 9px;font:inherit;width:100%}
-  textarea{resize:vertical;min-height:34px}
-  label{display:block;font-size:12px;color:var(--muted);margin:10px 0 4px}
-  .grid2{display:grid;grid-template-columns:1fr 1fr;gap:0 18px}
-  .scoretbl input[type=number]{width:60px}
-  .gatehint{font-size:11px;color:var(--warn)}
-  .overflow{overflow-x:auto}
-  dialog{background:var(--panel);color:var(--text);border:1px solid var(--line);
-    border-radius:12px;max-width:560px;width:92%;padding:20px 22px}
-  dialog::backdrop{background:rgba(0,0,0,.55)}
-  .toast{position:fixed;bottom:20px;right:20px;background:var(--panel2);border:1px solid var(--line);
-    border-radius:8px;padding:10px 16px;display:none;max-width:420px}
-</style>
-</head>
-<body>
-<header>
-  <h1>GANTRY &nbsp;/ &nbsp;Mission Control</h1>
-  <span class="sub">Phase 1 — Selection Engine · candidate intake → G0</span>
-  <span style="margin-left:auto" class="sub" id="who"></span>
-  <button class="act sec" style="padding:4px 10px;font-size:12px" onclick="logout()">Sign out</button>
-</header>
-<div class="wrap">
-  <div class="tiles" id="tiles"></div>
-  <nav class="tabs">
-    <button data-tab="queue" class="active">G0 Queue</button>
-    <button data-tab="registry">Registry</button>
-    <button data-tab="config">Configuration</button>
-  </nav>
-  <div id="pane"></div>
-</div>
-<div class="toast" id="toast"></div>
-
+:root{--bg:#0d1420;--panel:#151f2e;--raised:#1b293c;--line:#304057;--text:#ecf1f8;--muted:#acb9cc;--accent:#83d9cb;--warn:#f2c879;--bad:#ff9b9b}*{box-sizing:border-box}body{margin:0;background:var(--bg);color:var(--text);font:15px/1.6 system-ui,sans-serif}header{border-bottom:1px solid var(--line);padding:22px max(24px,calc((100vw - 1240px)/2));display:flex;gap:20px;align-items:center}h1{font-size:22px;letter-spacing:3px;margin:0}h2{font-size:27px;margin:4px 0 8px}h3{font-size:18px;margin:0 0 8px}p{margin:8px 0 16px}.muted,small{color:var(--muted)}.eyebrow{font-size:11px;letter-spacing:2px;text-transform:uppercase;color:var(--accent)}.wrap{max-width:1288px;margin:auto;padding:28px 24px 70px}.row{display:flex;align-items:center;gap:12px;flex-wrap:wrap}.spread{justify-content:space-between}.tiles{display:grid;grid-template-columns:repeat(4,1fr);gap:14px;margin:22px 0}.tile,.card{background:var(--panel);border:1px solid var(--line);border-radius:12px;padding:20px}.tile strong{font-size:29px;display:block}.tile span{color:var(--muted);font-size:12px}.card{margin:16px 0}.grid{display:grid;grid-template-columns:1fr 1fr;gap:18px}.stack{display:grid;gap:14px}nav{display:flex;flex-wrap:wrap;gap:8px;border-bottom:1px solid var(--line);margin-bottom:24px;padding-bottom:12px}button{font:inherit;cursor:pointer;background:var(--accent);color:#102521;border:1px solid transparent;border-radius:7px;padding:9px 16px;font-weight:650}button.sec,nav button{background:transparent;color:var(--text);border-color:var(--line)}nav button.active{background:var(--raised);border-color:var(--accent)}button.danger{background:transparent;color:var(--bad);border-color:var(--bad)}button:disabled{opacity:.4;cursor:not-allowed}button:focus-visible,a:focus-visible{outline:3px solid var(--warn);outline-offset:3px}input,select,textarea{width:100%;background:var(--bg);border:1px solid var(--line);border-radius:7px;color:var(--text);font:inherit;padding:9px 11px}textarea{min-height:90px;resize:vertical}input:focus,select:focus,textarea:focus{outline:2px solid var(--accent)}label{display:block;color:var(--muted);font-size:13px;margin:12px 0 5px}a{color:var(--accent)}.tag{display:inline-block;border:1px solid var(--line);border-radius:5px;font-size:12px;padding:2px 8px;color:var(--muted)}.strong,.credible{color:var(--accent)}.warning,.blockers{color:var(--warn)}.blockers{font-size:13px;padding-left:20px}.notice{border-left:3px solid var(--warn);background:#29271f;padding:12px 18px;border-radius:4px;margin:16px 0}.score{font-size:26px;white-space:nowrap}.memo{white-space:pre-wrap;overflow-wrap:anywhere;font:13px/1.8 ui-monospace,monospace;background:var(--bg);padding:18px;border-radius:8px;max-height:550px;overflow:auto}table{width:100%;border-collapse:collapse}td,th{text-align:left;border-bottom:1px solid var(--line);padding:12px 8px;vertical-align:top}th{font-size:12px;color:var(--muted)}.scoretable td:first-child{width:230px}.scoretable input{width:76px}.scoretable textarea{min-height:70px}.tablewrap{overflow:auto}.toast{position:fixed;bottom:22px;right:22px;padding:14px 20px;border:1px solid var(--accent);background:var(--raised);border-radius:8px;max-width:90vw;z-index:100}.toast:empty{display:none}dialog{background:var(--panel);color:var(--text);border:1px solid var(--line);border-radius:12px;width:min(760px,94vw);max-height:90vh;padding:26px}dialog::backdrop{background:#000a}.formerror{color:var(--bad);white-space:pre-wrap}footer{margin-top:30px;color:var(--muted);font-size:12px}details{margin:12px 0}summary{cursor:pointer}pre{white-space:pre-wrap;overflow-wrap:anywhere}@media(max-width:700px){header{padding:16px;flex-wrap:wrap}.wrap{padding:20px 16px}.grid{grid-template-columns:1fr}.tiles{grid-template-columns:1fr 1fr}.scoretable td:first-child{min-width:145px}.scoretable td:last-child{min-width:220px}#who{font-size:12px}h2{font-size:23px}.card{padding:16px}nav button{padding:8px 12px}}
+</style></head>
+<body><header><div><h1>GANTRY</h1><div class="eyebrow">Mission Control</div></div><span class="muted">Selection → evidence → decision</span><span id="who" style="margin-left:auto"></span><button class="sec" onclick="logout()">Sign out</button></header>
+<main class="wrap"><div class="row spread"><div><div class="eyebrow">Selection engine · v0.4 test</div><h2>Find the next business worth building.</h2><p class="muted">Compare the evidence. Set the limits. Make a deliberate decision.</p></div><button onclick="candidateForm()">+ New candidate</button></div><div id="demo"></div><div id="tiles" class="tiles"></div><nav aria-label="Main navigation"><a href="/operations" style="padding:9px 12px">Launch operations →</a><button data-tab="queue" class="active" onclick="navigate('queue')">Decision queue</button><button data-tab="registry" onclick="navigate('registry')">All candidates</button><button data-tab="config" onclick="navigate('config')">Configuration</button></nav><div id="pane" aria-live="polite"></div><footer>G0 approves an experiment. It does not establish market demand. Paid usage and retention govern subsequent investment.</footer></main>
+<dialog id="modal"><form id="modalform"><div id="modalbody"></div><p id="formerror" class="formerror" role="alert"></p><div class="row" style="margin-top:22px"><button id="submitmodal" type="submit">Save</button><button type="button" class="sec" onclick="document.querySelector('#modal').close()">Cancel</button></div></form></dialog><div id="toast" class="toast" role="status"></div>
 <script>
-const api = async (path, opts) => {
-  const r = await fetch('/api' + path, opts ? {
-    headers:{'Content-Type':'application/json'},
-    method: opts.method || 'POST',
-    body: opts.body ? JSON.stringify(opts.body) : undefined
-  } : undefined);
-  if (r.status === 401) { location.href = '/login'; throw new Error('signed out'); }
-  if (!r.ok) { const e = await r.json().catch(()=>({detail:r.statusText}));
-    throw new Error(e.detail || r.statusText); }
-  return r.json();
-};
-async function logout(){ await api('/logout', {body:{}}); location.href='/login'; }
-api('/me').then(m => { document.getElementById('who').textContent = m.email; }).catch(()=>{});
-
-const $ = sel => document.querySelector(sel);
-const esc = s => String(s ?? '').replace(/[&<>"]/g, c => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;'}[c]));
-let tab = 'queue', detailSlug = null;
-
-function toast(msg, isErr){
-  const t = $('#toast'); t.textContent = msg;
-  t.style.borderColor = isErr ? 'var(--bad)' : 'var(--good)';
-  t.style.display = 'block'; setTimeout(()=> t.style.display='none', 3800);
+const $=s=>document.querySelector(s);
+const esc=s=>String(s??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const DIMS=['pain_intensity','buyer_reachability','time_to_signal','budget_existence','incumbent_exposure','ai_leverage','moat_trajectory','founder_market_access','expansion_path','portfolio_synergy'];
+const label=s=>s.replaceAll('_',' ').replace(/^./,c=>c.toUpperCase());
+const statuses={draft:'Draft',scored:'Scored',untestable:'Untestable',g0_approved:'Approved',g0_rejected:'Rejected'};
+let tab='queue',active=null,records=[],clusters=[],operators=[],researchReady=false;
+async function api(path,body,method='POST'){
+ const r=await fetch('/api'+path,body===undefined?{}:{method,headers:{'Content-Type':'application/json'},body:JSON.stringify(body)});
+ if(r.status===401){location.href='/login';throw Error('Please sign in again.');}
+ const d=await r.json();if(!r.ok)throw Error(typeof d.detail==='string'?d.detail:JSON.stringify(d.detail));return d;
 }
-
-const STATUS_LABEL = {draft:'Draft', scored:'Scored — in queue', untestable:'Untestable',
-  g0_approved:'G0 Approved', g0_rejected:'G0 Rejected'};
-const bandChip = c => (!c.band || c.status==='untestable') ? '' :
-  `<span class="band ${c.band.name}" title="${esc(c.band.note)}">${c.band.name.replace(/_/g,' ').toUpperCase()} ${c.total_score}/50</span>`;
-const LANE = {substitution:'Lane 1 · Substitution', vertical:'Lane 2 · Vertical'};
-const MODE = {service_first:'Service-first', self_serve:'Self-serve'};
-
-async function refresh(){
-  const s = await api('/summary');
-  $('#tiles').innerHTML = [
-    [s.candidates,'Candidates'], [s.g0_queue,'Ready for G0'],
-    [s.by_status.untestable,'Untestable'], [s.by_status.g0_approved,'Approved'],
-    [s.clusters,'Clusters'], [s.operators,'Operators'],
-  ].map(([n,l])=>`<div class="tile"><div class="num">${n}</div><div class="lbl">${l}</div></div>`).join('');
-  if (tab==='queue') renderQueue();
-  else if (tab==='registry') renderRegistry();
-  else renderConfig();
+function toast(message){$('#toast').textContent=message;clearTimeout(toast.timer);toast.timer=setTimeout(()=>$('#toast').textContent='',6000);}
+async function logout(){await api('/logout',{});location.href='/login';}
+async function load(){
+ try{
+  const [s,cs,cls,ops,rs,me]=await Promise.all([api('/summary'),api('/candidates'),api('/clusters'),api('/operators'),api('/research-status'),api('/me')]);
+  records=cs;clusters=cls;operators=ops;researchReady=rs.configured;$('#who').textContent=me.email;
+  $('#tiles').innerHTML=[[s.candidates,'Candidates'],[s.g0_queue,'Ready for decision'],[s.by_status.g0_approved,'G0 approved'],[s.by_status.untestable,'Untestable']].map(([n,t])=>`<div class="tile"><strong>${n}</strong><span>${t}</span></div>`).join('');
+  $('#demo').innerHTML=s.demo_candidates?`<div class="notice"><b>Demonstration records included.</b> ${s.demo_candidates} candidates are examples, not validated opportunities. The seeded operators and audience clusters are illustrative.</div>`:'';
+  render();
+ }catch(e){toast(e.message);}
 }
-
-document.querySelectorAll('nav.tabs button').forEach(b => b.onclick = () => {
-  document.querySelectorAll('nav.tabs button').forEach(x=>x.classList.remove('active'));
-  b.classList.add('active'); tab = b.dataset.tab; detailSlug = null; refresh();
-});
-
-/* ---------- G0 Queue (Control pane) ---------- */
-async function renderQueue(){
-  const items = await api('/g0-queue');
-  if (!items.length){ $('#pane').innerHTML = '<p class="muted">Queue is empty — score a draft candidate in the Registry.</p>'; return; }
-  $('#pane').innerHTML = items.map(c => `
-    <div class="card">
-      <div class="row" style="justify-content:space-between">
-        <div>
-          <h3>${esc(c.name)} <span class="st ${c.status}">${STATUS_LABEL[c.status]}</span> ${bandChip(c)}</h3>
-          <div class="muted">${esc(c.one_liner)}</div>
-          <div class="row" style="margin-top:8px">
-            <span class="chip b">${LANE[c.lane]}</span><span class="chip b">${MODE[c.delivery_mode]}</span>
-            <span class="chip">cluster: ${esc(c.cluster || 'exception')}</span>
-            <span class="chip">operator: ${esc(c.operator || 'exception')}</span>
-          </div>
-          ${c.blockers.length ? `<div class="blockers">⚠ ${c.blockers.map(esc).join(' · ')}</div>` : ''}
-        </div>
-        <div class="row">
-          <button class="act sec" onclick="openDetail('${c.slug}')">Memo</button>
-          <button class="act" ${c.decidable?'':'disabled'} onclick="decide('${c.slug}', true)">Approve G0</button>
-          <button class="act danger" onclick="decide('${c.slug}', false)">Reject</button>
-        </div>
-      </div>
-    </div>`).join('');
+function navigate(t,slug=null){tab=t;active=slug;document.querySelectorAll('[data-tab]').forEach(b=>b.classList.toggle('active',b.dataset.tab===tab));render();}
+function chips(c){return `<span class="tag">${statuses[c.status]}</span> <span class="tag">${c.lane==='vertical'?'Vertical':'Substitution'}</span> <span class="tag">${c.delivery_mode==='service_first'?'Service-first':'Self-service'}</span> ${c.is_demo?'<span class="tag warning">Example</span>':''}`;}
+function score(c){return c.band?`<span class="score ${c.band.name}">${c.total_score}<small>/50</small></span><br><small>${label(c.band.name)}</small>`:'<span class="muted">Incomplete</span>';}
+function blockers(c){return c.blockers.length?`<ul class="blockers">${c.blockers.map(x=>`<li>${esc(x)}</li>`).join('')}</ul>`:'';}
+function render(){
+ document.querySelectorAll("[data-tab]").forEach(b=>b.classList.toggle("active",b.dataset.tab===tab));
+ if(active){const c=records.find(c=>c.slug===active);if(c)return detail(c);active=null;}
+ if(tab==='config')return config();
+ const items=tab==='queue'?records.filter(c=>!c.decision):records;
+ $('#pane').innerHTML=`<div class="row spread"><h3>${tab==='queue'?'Review before committing resources':'Candidate registry'}</h3><span class="muted">${items.length} ${items.length===1?'candidate':'candidates'}</span></div>`+
+ (items.length?items.map(c=>`<article class="card"><div class="row spread"><div style="max-width:850px"><h3>${esc(c.name)}</h3>${chips(c)}<p>${esc(c.one_liner)}</p><small>Audience: ${esc(c.cluster||'Unassigned / exception')} · Operator: ${esc(c.operator||'Unassigned / exception')}</small>${!c.decision?blockers(c):''}</div><div style="text-align:right">${score(c)}</div></div><div class="row" style="margin-top:16px"><button class="sec" onclick="navigate('registry','${c.slug}')">Review candidate</button>${!c.decision?`<button ${c.decidable?'':'disabled'} onclick="decisionForm('${c.slug}',true)">Approve G0</button><button class="danger" onclick="decisionForm('${c.slug}',false)">Reject</button>`:''}</div></article>`).join(''):'<div class="card"><p>No candidates here yet.</p><button onclick="candidateForm()">Create a candidate</button></div>');
 }
-
-async function decide(slug, approved){
-  const notes = prompt(approved ? 'Approval notes:' : 'Rejection rationale:') ?? '';
-  try {
-    await api(`/candidates/${slug}/decision`, {body:{approved, notes}});
-    toast(`${slug} ${approved?'approved':'rejected'} at G0`); refresh();
-  } catch(e){ toast(e.message, true); }
+const input=(name,text,value='',type='text')=>`<label for="${name}">${text}</label><input id="${name}" name="${name}" type="${type}" value="${esc(value)}">`;
+const area=(name,text,value='')=>`<label for="${name}">${text}</label><textarea id="${name}" name="${name}">${esc(value)}</textarea>`;
+function modal(title,fields,submit,button='Save'){
+ $('#modalbody').innerHTML=`<h2>${title}</h2>${fields}`;$('#formerror').textContent='';$('#submitmodal').textContent=button;$('#submitmodal').disabled=false;
+ $('#modalform').onsubmit=async e=>{e.preventDefault();$('#submitmodal').disabled=true;try{await submit(new FormData(e.target));$('#modal').close();await load();}catch(e){$('#formerror').textContent=e.message;}finally{$('#submitmodal').disabled=false;}};
+ $('#modal').showModal();
 }
-
-/* ---------- Registry ---------- */
-async function renderRegistry(){
-  if (detailSlug) return renderDetail(detailSlug);
-  const items = await api('/candidates');
-  $('#pane').innerHTML = `
-    <div class="card overflow"><table>
-      <tr><th>Candidate</th><th>Lane / Mode</th><th>Cluster</th><th>Operator</th><th>Score</th><th>Status</th></tr>
-      ${items.map(c=>`<tr class="click" onclick="openDetail('${c.slug}')">
-        <td><b>${esc(c.name)}</b><br><span class="muted">${esc(c.one_liner)}</span></td>
-        <td>${LANE[c.lane]}<br><span class="muted">${MODE[c.delivery_mode]}</span></td>
-        <td>${esc(c.cluster || '—')}</td><td>${esc(c.operator || '—')}</td>
-        <td>${c.total_score}/50<br>${bandChip(c)}</td>
-        <td><span class="st ${c.status}">${STATUS_LABEL[c.status]}</span></td></tr>`).join('')}
-    </table></div>`;
+function select(name,text,value,options){return `<label for="${name}">${text}</label><select id="${name}" name="${name}">${options.map(([id,t])=>`<option value="${esc(id)}" ${id===value?'selected':''}>${esc(t)}</option>`).join('')}</select>`;}
+function candidateForm(slug){
+ const c=records.find(c=>c.slug===slug)||{lane:'vertical',delivery_mode:'service_first'};
+ modal(slug?'Edit candidate':'New candidate',`<p class="muted">Start with a specific buyer and outcome. You can complete the evidence later.</p>`+input('name','Candidate name',c.name)+input('slug','Identifier (lowercase words separated by hyphens)',c.slug)+area('one_liner','What will this business deliver?',c.one_liner)+`<div class="grid">`+select('lane','Opportunity lane',c.lane,[['vertical','Vertical expertise'],['substitution','Product substitution']])+select('delivery_mode','Delivery mode',c.delivery_mode,[['service_first','Service-first'],['self_serve','Self-service product']])+`</div>`+area('persona','Buyer persona',c.persona)+area('channel','How will we reach this buyer?',c.channel)+select('cluster','Audience cluster',c.cluster||'',[['','No assignment'],...clusters.map(x=>[x.slug,x.name])])+area('cluster_exception','If unassigned, explain the audience exception',c.cluster_exception)+select('operator','Operator',c.operator||'',[['','No assignment'],...operators.map(x=>[x.slug,x.name])])+area('operator_exception','If unassigned, explain the operator exception',c.operator_exception),async form=>{
+  const b=Object.fromEntries(form);b.cluster=b.cluster||null;b.operator=b.operator||null;b.case_against=c.case_against||'';b.kill_criterion=c.kill_criterion||'';
+  const saved=await api('/candidates'+(slug?'/'+slug:''),b,slug?'PUT':'POST');active=saved.slug;tab='registry';toast('Candidate saved');
+ });
+ $('#name').required=true;$('#slug').required=true;$('#slug').pattern='[a-z0-9][a-z0-9-]*';$('#one_liner').required=true;
+ if(slug)$('#slug').readOnly=true;else $('#name').oninput=()=>{$('#slug').value=$('#name').value.toLowerCase().replace(/[^a-z0-9]+/g,'-').replace(/^-|-$/g,'');};
 }
-
-function openDetail(slug){ tab='registry'; detailSlug=slug;
-  document.querySelectorAll('nav.tabs button').forEach(x=>x.classList.toggle('active', x.dataset.tab==='registry'));
-  renderDetail(slug);
+function decisionForm(slug,approved){
+ const c=records.find(c=>c.slug===slug);
+ modal(approved?'Approve this launch experiment?':'Reject this candidate?',`<p><b>${esc(c.name)}</b> · ${c.total_score}/50</p><p class="muted">This records your decision and locks the candidate’s scores, declarations, research and memo commentary.</p>`+area('notes',approved?'Decision rationale':'Reason for rejection'),async form=>{await api(`/candidates/${slug}/decision`,{approved,notes:form.get('notes')});toast('Decision recorded');},approved?'Confirm approval':'Confirm rejection');
 }
-
-async function renderDetail(slug){
-  const c = await api(`/candidates/${slug}`);
-  const locked = !!c.decision;
-  const dims = c.scorecard.dimensions || {};
-  const DIMS = ['pain_intensity','buyer_reachability','time_to_signal','budget_existence',
-    'incumbent_exposure','ai_leverage','moat_trajectory','founder_market_access',
-    'expansion_path','portfolio_synergy'];
-  const GATING = ['buyer_reachability','time_to_signal'];
-  $('#pane').innerHTML = `
-    <button class="act sec" onclick="detailSlug=null;renderRegistry()">← All candidates</button>
-    <div class="card" style="margin-top:12px">
-      <h3>${esc(c.name)} <span class="st ${c.status}">${STATUS_LABEL[c.status]}</span> ${bandChip(c)}</h3>
-      <div class="muted">${esc(c.one_liner)}</div>
-      <div class="row" style="margin-top:8px">
-        <span class="chip b">${LANE[c.lane]}</span><span class="chip b">${MODE[c.delivery_mode]}</span>
-        <span class="chip">persona: ${esc(c.persona||'—')}</span>
-        <span class="chip">channel: ${esc(c.channel||'—')}</span>
-      </div>
-      ${c.blockers.length ? `<div class="blockers">⚠ ${c.blockers.map(esc).join(' · ')}</div>` : ''}
-    </div>
-    <div class="card">
-      <h3>Scorecard ${locked?'<span class="muted">(locked by G0 decision)</span>':''}</h3>
-      <div class="overflow"><table class="scoretbl">
-        <tr><th>Dimension</th><th>Score</th><th>Evidence ${''}</th></tr>
-        ${DIMS.map(d=>`<tr>
-          <td>${d}${GATING.includes(d)?' <span class="gatehint">gating ≥3 + evidence</span>':''}</td>
-          <td><input type="number" min="1" max="5" id="s_${d}" value="${dims[d]?dims[d].score:''}" ${locked?'disabled':''}></td>
-          <td><textarea id="e_${d}" ${locked?'disabled':''}>${esc(dims[d]?dims[d].evidence:'')}</textarea></td>
-        </tr>`).join('')}
-      </table></div>
-      ${locked?'':`<div style="margin-top:12px"><button class="act" onclick="saveScores('${c.slug}')">Save scorecard</button></div>`}
-    </div>
-    <div class="card">
-      <h3>Case against &amp; kill criterion ${locked?'<span class="muted">(locked)</span>':'<span class="muted">(required for approval)</span>'}</h3>
-      <label>Strongest case against — argued properly, not strawmanned</label>
-      <textarea id="ca" style="min-height:64px" ${locked?'disabled':''}>${esc(c.case_against||'')}</textarea>
-      <label>Kill criterion — falsifiable, checkable, dated</label>
-      <textarea id="kc" ${locked?'disabled':''}>${esc(c.kill_criterion||'')}</textarea>
-      ${locked?'':`<div style="margin-top:12px"><button class="act" onclick="saveCase('${c.slug}')">Save case against</button></div>`}
-    </div>
-    <div class="card">
-      <h3>Pre-committed thresholds ${locked?'<span class="muted">(locked at G0 — extension-memo flow only)</span>':''}</h3>
-      <label>G1 reachability</label><input id="t_g1" value="${esc(c.thresholds.g1_reachability)}" ${locked?'disabled':''}>
-      <label>G2 engagement</label><input id="t_g2" value="${esc(c.thresholds.g2_engagement)}" ${locked?'disabled':''}>
-      <label>G3 retention</label><input id="t_g3" value="${esc(c.thresholds.g3_retention)}" ${locked?'disabled':''}>
-      <div class="grid2">
-        <div><label>Budget cap (USD)</label><input type="number" id="t_budget" value="${c.thresholds.budget_cap_usd}" ${locked?'disabled':''}></div>
-        <div><label>Time cap (weeks)</label><input type="number" id="t_weeks" value="${c.thresholds.time_cap_weeks}" ${locked?'disabled':''}></div>
-      </div>
-      ${locked?'':`<div style="margin-top:12px"><button class="act" onclick="saveThresholds('${c.slug}')">Save thresholds</button></div>`}
-    </div>
-    <div class="card">
-      <div class="row" style="justify-content:space-between">
-        <h3>G0 memo</h3>
-        <button class="act sec" onclick="regen('${c.slug}')">Regenerate draft</button>
-      </div>
-      <div class="memo">${esc(c.memo || '— no memo yet —')}</div>
-    </div>`;
+async function saveSection(slug,section,form){
+ toast('');const b=Object.fromEntries(new FormData(form));
+ if(section==='thresholds'){const names=Object.keys(b).filter(k=>k.startsWith('plan_'));const values=names.filter(k=>b[k]!=='');if(values.length&&values.length!==names.length){toast('Complete every numeric gate field or leave the execution plan blank');return;}b.execution_plan=values.length?{g1:{targets:{}},g2:{targets:{}},g3:{targets:{}}}:null;for(const key of names){if(values.length){const [,gate,...rest]=key.split('_'),metric=rest.join('_');let value=Number(b[key]);if(metric==='budget')b.execution_plan[gate].budget_cents=Math.round(value*100);else if(metric==='days')b.execution_plan[gate].days=value;else b.execution_plan[gate].targets[metric]=metric==='capture_rate'?value/100:value;}delete b[key];}b.budget_cap_usd=Number(b.budget_cap_usd);b.time_cap_weeks=Number(b.time_cap_weeks);}
+ try{await api(`/candidates/${slug}/${section}`,b,section==='memo'?'PUT':'POST');await load();toast('Saved');}catch(e){toast(e.message);}
 }
-
-async function saveScores(slug){
-  const dims = {};
-  document.querySelectorAll('[id^="s_"]').forEach(inp=>{
-    const d = inp.id.slice(2), v = parseInt(inp.value,10);
-    if (v>=1 && v<=5) dims[d] = {score:v, evidence: $('#e_'+d).value};
-  });
-  try { await api(`/candidates/${slug}/score`, {body:{dimensions:dims}});
-    toast('Scorecard saved — status recomputed'); refresh(); renderDetail(slug);
-  } catch(e){ toast(e.message, true); }
+function detail(c){
+ const locked=!!c.decision,t=c.thresholds,sc=c.scorecard.dimensions;
+ $('#pane').innerHTML=`<button class="sec" onclick="navigate('registry')">← All candidates</button><article class="card"><div class="row spread"><div><h2>${esc(c.name)}</h2>${chips(c)}<p>${esc(c.one_liner)}</p></div><div>${score(c)}</div></div><div class="grid"><p><small>BUYER</small><br>${esc(c.persona||'Not defined')}</p><p><small>CHANNEL</small><br>${esc(c.channel||'Not defined')}</p></div><p><small>Audience: ${esc(c.cluster||c.cluster_exception||'Missing')} · Operator: ${esc(c.operator||c.operator_exception||'Missing')}</small></p>${locked?`<div class="notice">Decision locked · ${esc(c.decision.decided_by)} · ${esc(c.decision.decided_at)}<br>${esc(c.decision.notes)}</div>`:blockers(c)}<div class="row">${locked?'':`<button class="sec" onclick="candidateForm('${c.slug}')">Edit declarations</button><button ${c.decidable?'':'disabled'} onclick="decisionForm('${c.slug}',true)">Approve G0</button><button class="danger" onclick="decisionForm('${c.slug}',false)">Reject</button>`}</div></article>
+ <section class="card"><h3>Research & proposed scores</h3><p class="muted">Research produces a draft for review. Only you can apply its proposed scores.</p>${!researchReady?'<p class="warning">Research provider is not configured. Manual scoring is available below.</p>':''}<button id="runresearch" ${locked||!researchReady?'disabled':''} onclick="runResearch('${c.slug}')">Run research</button>${researchView(c)}</section>
+ <section class="card"><h3>Scorecard</h3><p class="muted">Score each dimension from 1 to 5. Reachability and time-to-signal require at least 3 and evidence. Approval requires 35/50 or higher.</p><form id="scores"><fieldset ${locked?'disabled':''} style="border:0;padding:0"><div class="tablewrap"><table class="scoretable"><thead><tr><th>Dimension</th><th>Score</th><th>Evidence</th></tr></thead><tbody>${DIMS.map(d=>`<tr><td>${label(d)}${['buyer_reachability','time_to_signal'].includes(d)?'<br><small class="warning">Required gate · ≥3</small>':''}</td><td><input aria-label="${label(d)} score" name="${d}" type="number" min="1" max="5" step="1" value="${sc[d]?.score||''}"></td><td><textarea aria-label="${label(d)} evidence" name="${d}_evidence">${esc(sc[d]?.evidence||'')}</textarea></td></tr>`).join('')}</tbody></table></div>${locked?'':'<button style="margin-top:16px">Save scorecard</button>'}</fieldset></form></section>
+ <div class="grid"><section class="card"><h3>Case against</h3><form id="caseform"><fieldset ${locked?'disabled':''} style="border:0;padding:0">${area('case_against','Strongest case against this business',c.case_against)+area('kill_criterion','Falsifiable kill criterion',c.kill_criterion)}${locked?'':'<button style="margin-top:16px">Save case against</button>'}</fieldset></form></section><section class="card"><h3>Pre-committed thresholds</h3><form id="thresholdform"><fieldset ${locked?'disabled':''} style="border:0;padding:0">${input('g1_reachability','G1 · Reachability',t.g1_reachability)+input('g2_engagement','G2 · Engagement',t.g2_engagement)+input('g3_retention','G3 · Retention',t.g3_retention)}<div class="grid">${input('budget_cap_usd','Overall budget cap ($)',t.budget_cap_usd,'number')+input('time_cap_weeks','Overall time cap (weeks)',t.time_cap_weeks,'number')}</div>${planFields(c)}<p><small>Numeric targets lock with G0. ${locked?'':'<button type="button" class="sec" onclick="planExample()">Fill example plan for review</button>'}</small></p>${locked?'':'<button>Save thresholds</button>'}</fieldset></form></section></div>
+ <section class="card"><h3>G0 decision memo</h3><form id="memoform"><fieldset ${locked?'disabled':''} style="border:0;padding:0">${area('memo_notes','Reviewer commentary — preserved when the memo is regenerated',c.memo_notes)}${locked?'':'<button style="margin-top:16px">Save commentary</button>'}</fieldset></form><details open><summary>Generated memo</summary><div class="memo">${esc(c.memo)}</div></details></section>`;
+ $('#scores').onsubmit=async e=>{e.preventDefault();const f=new FormData(e.target),dimensions={};for(const d of DIMS){if(f.get(d)!=='')dimensions[d]={score:Number(f.get(d)),evidence:f.get(d+'_evidence')};}try{await api(`/candidates/${c.slug}/score`,{dimensions});toast('Scorecard saved');await load();}catch(e){toast(e.message);}};
+ for(const [id,section] of [['caseform','case'],['thresholdform','thresholds'],['memoform','memo']])$('#'+id).onsubmit=e=>{e.preventDefault();saveSection(c.slug,section,e.target);};
+ document.querySelectorAll('[id^=plan_]').forEach(el=>{const fractional=el.id.endsWith('budget')||el.id.endsWith('capture_rate');el.min=fractional?'0.01':'1';el.step=fractional?'0.01':'1';});
+ for(const id of ['budget_cap_usd','time_cap_weeks']){$('#'+id).min=1;$('#'+id).step=1;$('#'+id).required=true;}
 }
-
-async function saveCase(slug){
-  try { await api(`/candidates/${slug}/case`, {body:{
-      case_against: $('#ca').value, kill_criterion: $('#kc').value }});
-    toast('Case against saved'); refresh(); renderDetail(slug);
-  } catch(e){ toast(e.message, true); }
+function researchView(c){const r=c.research;if(!r)return '<p class="muted">No research corpus saved.</p>';
+ return `<details open><summary>Review research corpus</summary>${['workflow_map','regulatory_landscape','incumbents','budget_evidence','persona','watering_holes','case_against','kill_criterion'].map(k=>`<h3 style="margin-top:20px">${label(k)}</h3><p style="white-space:pre-wrap">${esc(r[k]||'Not covered')}</p>`).join('')}<h3>Sources</h3>${r.sources.map(s=>`<p><a href="${esc(s.url)}" target="_blank" rel="noopener noreferrer">${esc(s.title)}</a><br><small>${esc(s.id)} · ${esc(s.retrieved_at)}</small><br>${esc(s.excerpt)}</p>`).join('')}<h3>Proposals</h3><div class="tablewrap"><table><tr><th>Dimension</th><th>Score / confidence</th><th>Evidence</th></tr>${Object.entries(r.proposed_scores).map(([d,p])=>`<tr><td>${label(d)}</td><td>${p.score}/5 · ${esc(p.confidence)}</td><td>${esc(p.evidence)}<br><small>${p.source_ids.map(esc).join(', ')}</small></td></tr>`).join('')}</table></div><button style="margin-top:16px" ${c.decision?'disabled':''} onclick="acceptResearch('${c.slug}')">Review & apply proposed scores</button></details>`;
 }
-
-async function saveThresholds(slug){
-  try { await api(`/candidates/${slug}/thresholds`, {body:{
-      g1_reachability: $('#t_g1').value, g2_engagement: $('#t_g2').value,
-      g3_retention: $('#t_g3').value,
-      budget_cap_usd: parseInt($('#t_budget').value,10)||0,
-      time_cap_weeks: parseInt($('#t_weeks').value,10)||0 }});
-    toast('Thresholds saved'); renderDetail(slug);
-  } catch(e){ toast(e.message, true); }
+async function runResearch(slug){$('#runresearch').disabled=true;$('#runresearch').textContent='Researching…';try{await api(`/candidates/${slug}/research`,{});toast('Research ready for review');await load();}catch(e){toast(e.message);$('#runresearch').disabled=false;$('#runresearch').textContent='Run research';}}
+function acceptResearch(slug){modal('Apply these proposed scores?',`<p>This replaces scores for the researched dimensions only. Review the source evidence first. Missing dimensions remain unchanged. No approval will be recorded.</p>`,async()=>{await api(`/candidates/${slug}/accept-research`,{});toast('Proposed scores applied for human review');},'Apply scores');}
+function config(){
+ $('#pane').innerHTML=`<h3>Audience & operator configuration</h3><div class="grid"><section class="card"><div class="row spread"><h3>Audience clusters</h3><button class="sec" onclick="configForm('cluster')">+ Add cluster</button></div>${clusters.map(c=>`<p><b>${esc(c.name)}</b><br>${esc(c.description)}<br><small>${c.watering_holes.map(esc).join(' · ')}</small></p>`).join('')}</section><section class="card"><div class="row spread"><h3>Operator bench</h3><button class="sec" onclick="configForm('operator')">+ Add operator</button></div>${operators.map(o=>`<p><b>${esc(o.name)}</b> <span class="tag">Load: ${o.load}</span><br>${esc(o.domain_profile)}<br><small>${esc(o.equity_notes||'Equity terms not recorded')}</small></p>`).join('')}</section></div><section class="card"><h3>Connections</h3><p>Research: <b>${researchReady?'Configured — quality acceptance pending':'Not configured'}</b></p><p class="muted">Launch, signal and gate workflows are available in Launch operations. Email, social and CRM provider connections remain unverified; CSV staging is available. No outbound campaigns run from this version.</p></section><section class="card"><h3>Reviewer access</h3><p class="muted">Each reviewer requires an allowlisted email and a separately provisioned access key. Access configuration is managed by the owner.</p></section>`;
 }
-
-async function regen(slug){
-  try { await api(`/candidates/${slug}/memo`, {body:{}}); toast('Memo regenerated'); renderDetail(slug); }
-  catch(e){ toast(e.message, true); }
-}
-
-/* ---------- Configuration ---------- */
-async function renderConfig(){
-  const [clusters, operators, emails] = await Promise.all([
-    api('/clusters'), api('/operators'), api('/allowed-emails')]);
-  $('#pane').innerHTML = `
-    <div class="card">
-      <h3>Access — allowed emails</h3>
-      <p class="muted" style="margin:4px 0 10px">Email allowlist sign-in, no passwords. Removing an email ends its sessions.</p>
-      <div class="row">${emails.map(e=>`<span class="chip b">${esc(e)}</span>`).join('')}</div>
-      <div class="row" style="margin-top:12px;max-width:420px">
-        <input id="new_email" type="email" placeholder="add teammate@company.com" style="flex:1">
-        <button class="act" onclick="addEmail()">Add</button>
-      </div>
-    </div>
-    <div class="card">
-      <h3>Audience clusters</h3>
-      <p class="muted" style="margin:4px 0 10px">Durable shared assets — list, trust, community presence — that launches compound (FRAMEWORK §5).</p>
-      <table><tr><th>Cluster</th><th>Description</th><th>Watering holes</th></tr>
-      ${clusters.map(cl=>`<tr><td><b>${esc(cl.name)}</b><br><span class="muted">${cl.slug}</span></td>
-        <td>${esc(cl.description)}</td><td>${cl.watering_holes.map(esc).join('<br>')}</td></tr>`).join('')}
-      </table>
-    </div>
-    <div class="card">
-      <h3>Operator bench</h3>
-      <p class="muted" style="margin:4px 0 10px">Matched at G0; hands-on at the G2 concentration trigger; founder equity from day one.</p>
-      <table><tr><th>Operator</th><th>Domain profile</th><th>Load</th></tr>
-      ${operators.map(o=>`<tr><td><b>${esc(o.name)}</b><br><span class="muted">${o.slug}</span></td>
-        <td>${esc(o.domain_profile)}</td><td>${o.load}</td></tr>`).join('')}
-      </table>
-    </div>
-    <div class="card">
-      <h3>Adapters <span class="muted">(Phase 2)</span></h3>
-      <div class="row">
-        <span class="chip">Neubloc · email — <i>not yet connected</i></span>
-        <span class="chip">Vox · social — <i>listening stub</i></span>
-        <span class="chip">Forum · CRM — <i>not yet connected</i></span>
-      </div>
-    </div>`;
-}
-
-async function addEmail(){
-  const email = $('#new_email').value.trim();
-  if (!email) return;
-  try { await api('/allowed-emails', {body:{email}}); toast(email+' can now sign in'); renderConfig(); }
-  catch(e){ toast(e.message, true); }
-}
-
-refresh();
-</script>
-</body>
-</html>
+function configForm(kind){const cluster=kind==='cluster';modal(cluster?'Add audience cluster':'Add operator',input('slug','Identifier')+input('name','Name')+(cluster?area('description','Description')+area('watering_holes','Communities and channels — one per line'):area('domain_profile','Domain experience')+input('load','Current load',0,'number')+area('equity_notes','Equity notes (no terms granted by this form)')),async f=>{const b=Object.fromEntries(f);if(cluster)b.watering_holes=b.watering_holes.split('\n').map(s=>s.trim()).filter(Boolean);else b.load=Number(b.load);await api(cluster?'/clusters':'/operators',b);toast('Configuration saved');});$('#name').required=true;$('#slug').required=true;$('#slug').pattern='[a-z0-9][a-z0-9-]*';}
+function planFields(c){const p=c.thresholds.execution_plan;return ['g1','g2','g3'].map(g=>{const metrics=g==='g1'?['visitors','captures','capture_rate']:g==='g2'?(c.delivery_mode==='service_first'?['paid_delivered']:['activations','week2_returns']):['payers','outbound_payers','repeat_payers'];return `<h3 style="margin-top:20px">${g.toUpperCase()} numeric plan</h3><div class="grid">${['days','budget',...metrics].map(k=>{let v=p?.[g]?(k==='days'?p[g].days:k==='budget'?p[g].budget_cents/100:p[g].targets[k]):'';if(k==='capture_rate'&&v!=='')v*=100;return input('plan_'+g+'_'+k,k==='budget'?'Gate budget ($)':k==='days'?'Gate duration (days)':label(k)+(k==='capture_rate'?' (%)':''),v,'number');}).join('')}</div>`;}).join('');}
+function planExample(){const mode=records.find(c=>c.slug===active).delivery_mode;const plan={g1:{days:7,budget:500,visitors:20,captures:2,capture_rate:5},g2:{days:7,budget:750,...(mode==='service_first'?{paid_delivered:3}:{activations:3,week2_returns:1})},g3:{days:7,budget:750,payers:3,outbound_payers:1,repeat_payers:1}};for(const [g,fields]of Object.entries(plan))for(const [k,v]of Object.entries(fields))$('#plan_'+g+'_'+k).value=v;}
+load();
+</script></body></html>

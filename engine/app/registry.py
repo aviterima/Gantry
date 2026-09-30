@@ -15,6 +15,7 @@ from pathlib import Path
 import yaml
 
 from .models import Candidate, Cluster, Operator
+from .textio import read_text, write_text
 
 
 class Registry:
@@ -41,15 +42,15 @@ class Registry:
         cdir = self.candidates_dir / candidate.slug
         cdir.mkdir(parents=True, exist_ok=True)
         payload = json.loads(candidate.model_dump_json(exclude={"memo"}))
-        (cdir / "candidate.yaml").write_text(
-            yaml.safe_dump(payload, sort_keys=False, allow_unicode=True)
+        write_text(
+            cdir / "candidate.yaml", yaml.safe_dump(payload, sort_keys=False, allow_unicode=True)
         )
-        (cdir / "memo.md").write_text(candidate.memo)
+        write_text(cdir / "memo.md", candidate.memo)
 
     def _load_candidate(self, path: Path) -> Candidate:
-        raw = yaml.safe_load(path.read_text())
+        raw = yaml.safe_load(read_text(path))
         memo_path = path.parent / "memo.md"
-        raw["memo"] = memo_path.read_text() if memo_path.exists() else ""
+        raw["memo"] = read_text(memo_path) if memo_path.exists() else ""
         return Candidate.model_validate(raw)
 
     # -- clusters / operators ------------------------------------------
@@ -70,10 +71,10 @@ class Registry:
         path = self.data_dir / filename
         if not path.exists():
             return []
-        return yaml.safe_load(path.read_text()) or []
+        return yaml.safe_load(read_text(path)) or []
 
     def _save_list(self, filename: str, items) -> None:
         payload = [json.loads(i.model_dump_json()) for i in items]
-        (self.data_dir / filename).write_text(
-            yaml.safe_dump(payload, sort_keys=False, allow_unicode=True)
+        write_text(
+            self.data_dir / filename, yaml.safe_dump(payload, sort_keys=False, allow_unicode=True)
         )

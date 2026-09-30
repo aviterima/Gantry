@@ -3,7 +3,8 @@ on:
   push:
     branches: ["**"]
   pull_request:
-
+permissions:
+  contents: read
 jobs:
   test:
     runs-on: ubuntu-latest
@@ -12,8 +13,45 @@ jobs:
       - uses: actions/setup-python@v5
         with:
           python-version: "3.11"
-      - run: pip install -r requirements.txt
-      - run: python -m pytest engine/tests -q
-      - name: Seed smoke test
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+          cache: npm
+      - run: pip install -r requirements-dev.txt
+      - run: npm ci
+      - run: python -m ruff check engine
+      - run: python -m ruff format --check engine
+      - run: python -m mypy
+      - name: Generate and verify shared API contract
         run: |
-          GANTRY_DATA_DIR=/tmp/gantry-ci-data python -m engine.seed
+          python -m engine.export_contract
+          git diff --exit-code -- deploy/cloudflare/src/contracts.json deploy/cloudflare/src/dimensions.json
+          node scripts/build-validators.mjs
+      - run: python -m pytest engine/tests -q
+      - run: npx playwright install --with-deps chromium
+      - run: npm run test:operations
+      - run: npm run test:ui
+      - name: Build Worker without deploying
+        run: npm run build:worker
+        env:
+          WRANGLER_SEND_METRICS: "false"
+      - name: Seed smoke test
+        run: GANTRY_DATA_DIR=/tmp/gantry-ci-data python -m engine.seed
+      - name: Reject committed bytecode
+        run: test -z "$(git ls-files '*.pyc')"
+
+  windows-startup:
+    runs-on: windows-latest
+    env:
+      PYTHONUTF8: "0"
+    steps:
+      - uses: actions/checkout@v4
+      - uses: actions/setup-python@v5
+        with:
+          python-version: "3.14"
+      - uses: actions/setup-node@v4
+        with:
+          node-version: "22"
+      - run: python -m pip install -r requirements.txt
+      - name: Test native Windows encoding, recovery and startup
+        run: python -m pytest engine/tests/test_windows_startup.py -q

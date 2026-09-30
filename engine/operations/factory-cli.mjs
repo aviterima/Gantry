@@ -1,0 +1,1 @@
+import {filesFor,landing} from './factory.mjs';let raw='';for await(const c of process.stdin)raw+=c;const p=JSON.parse(raw);process.stdout.write(p.preview?landing(p.launch,true):JSON.stringify(filesFor(p)));

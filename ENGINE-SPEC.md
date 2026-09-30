@@ -1,5 +1,13 @@
 # Gantry Engine: Multi-Phase Specification
 
+**Implementation status (2026-09-29):** v0.4 is an end-to-end testing release.
+Selection, launch preparation, CSV signals, gate decisions, concentration, wind-down,
+promotion checklists and handoff generation are implemented for sandbox/CSV testing.
+See `TESTING.md` and `engine/docs/adr/0004-testing-release.md`. Live provider adapters,
+public landing deployment, payment processing, automatic candidate generation and
+commercial acceptance are not complete. The phase descriptions below remain the
+full target specification; the release coverage matrix distinguishes delivered scope.
+
 Companion to `FRAMEWORK.md`. The framework defines *what* we decide (lanes, scorecard,
 gates); this spec defines the system that executes it — from candidate intake through
 market test — and how it integrates the operating stack:

@@ -58,3 +58,4 @@ decision:
     per cluster rules.
   decided_at: '2026-09-01T15:48:51.621026Z'
 created_at: '2026-09-01T15:48:51.621030Z'
+is_demo: true

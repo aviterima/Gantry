@@ -17,9 +17,15 @@
  * enables magic links (Phase 2).
  */
 
+import {validatePlan} from "../../../engine/operations/kernel.mjs";
+import operationsHtml from "../../../engine/static/operations.html";
+export {OperationsStore} from "./operations.js";
 import appHtml from "../../../engine/static/index.html";
 import loginHtml from "../../../engine/static/login.html";
 import seed from "./seed.json";
+import dimensionQuestions from "./dimensions.json";
+import * as validators from "./validators.js";
+function validate(name, value) { if (!validators[name](value)) throw {status:422, detail:"Invalid " + name + " payload"}; return value; }
 
 /* ---------- domain rules (mirrors engine/app/models.py) ---------- */
 
@@ -53,6 +59,8 @@ const status = (c) => c.decision
   : failedGates(c).length ? "untestable" : "scored";
 const declGaps = (c) => {
   const g = [];
+  if (!(c.persona || "").trim()) g.push("persona");
+  if (!(c.channel || "").trim()) g.push("channel");
   if (!c.cluster && !(c.cluster_exception || "").trim()) g.push("cluster");
   if (!c.operator && !(c.operator_exception || "").trim()) g.push("operator");
   const t = c.thresholds || {};
@@ -66,6 +74,7 @@ const blockers = (c) => {
   const b = [];
   if (missingDims(c).length) b.push("unscored dimensions: " + missingDims(c).join(", "));
   if (failedGates(c).length) b.push("failed gating dimensions: " + failedGates(c).join(", "));
+  if (!missingDims(c).length && totalScore(c) < 35) b.push("score below approval floor: 35/50 required");
   if (declGaps(c).length) b.push("missing declarations: " + declGaps(c).join(", "));
   return b;
 };
@@ -116,7 +125,7 @@ function draftMemo(c) {
     `- **G2 engagement:** ${t.g2_engagement || "_not set_"}`,
     `- **G3 retention:** ${t.g3_retention || "_not set_"}`,
     `- **Caps:** $${(t.budget_cap_usd || 0).toLocaleString("en-US")} / ${t.time_cap_weeks || 0} weeks`,
-    "", "## Decision", "");
+    "", "## Structured execution plan", t.execution_plan?JSON.stringify(t.execution_plan,null,2):"_Not recorded; candidate cannot enter the launch engine._", "", "## Reviewer commentary", "", c.memo_notes || "_No additional commentary._", "", "## Decision", "");
   lines.push(c.decision
     ? `**${c.decision.approved ? "APPROVED" : "REJECTED"}** by ${c.decision.decided_by} — ${c.decision.notes || "no notes"}`
     : "_Pending G0 review._");
@@ -141,25 +150,31 @@ function view(c) {
 const store = {
   async seedIfNeeded(kv) {
     if (await kv.get("seeded")) return;
-    for (const c of seed.candidates) await kv.put("candidate:" + c.slug, JSON.stringify(c));
-    await kv.put("clusters", JSON.stringify(seed.clusters));
-    await kv.put("operators", JSON.stringify(seed.operators));
+    for (const c of seed.candidates) {
+      if (!(await kv.get("candidate:" + c.slug))) await kv.put("candidate:" + c.slug, JSON.stringify(c));
+    }
+    if (!(await kv.get("clusters"))) await kv.put("clusters", JSON.stringify(seed.clusters));
+    if (!(await kv.get("operators"))) await kv.put("operators", JSON.stringify(seed.operators));
     if (!(await kv.get("allowed"))) await kv.put("allowed", JSON.stringify(seed.allowed_emails));
     await kv.put("seeded", new Date().toISOString());
   },
   async candidates(kv) {
-    const list = await kv.list({ prefix: "candidate:" });
+    const keys = []; let cursor;
+    do {
+      const page = await kv.list({ prefix: "candidate:", cursor });
+      keys.push(...page.keys); cursor = page.list_complete === false ? page.cursor : undefined;
+    } while (cursor);
     const out = [];
-    for (const k of list.keys) {
+    for (const k of keys) {
       const raw = await kv.get(k.name);
-      if (raw) out.push(JSON.parse(raw));
+      if (raw) out.push(normalize(JSON.parse(raw)));
     }
     out.sort((a, b) => (a.slug < b.slug ? -1 : 1));
     return out;
   },
   async candidate(kv, slug) {
     const raw = await kv.get("candidate:" + slug);
-    return raw ? JSON.parse(raw) : null;
+    return raw ? normalize(JSON.parse(raw)) : null;
   },
   saveCandidate: (kv, c) => kv.put("candidate:" + c.slug, JSON.stringify(c)),
   getList: async (kv, key) => JSON.parse((await kv.get(key)) || "[]"),
@@ -177,21 +192,53 @@ async function hmacHex(secret, payload) {
   const sig = await crypto.subtle.sign("HMAC", key, new TextEncoder().encode(payload));
   return [...new Uint8Array(sig)].map((b) => b.toString(16).padStart(2, "0")).join("");
 }
-async function makeCookie(secret, email) {
-  const payload = `${email}|${Math.floor(Date.now() / 1000) + TTL}`;
-  return `${payload}|${await hmacHex(secret, payload)}`;
+function accessHash(env, email) {
+  try {const h = JSON.parse(env.GANTRY_ACCESS_KEY_HASHES || "{}")[email];
+    return typeof h === "string" && /^[a-f0-9]{64}$/.test(h) ? h : null;
+  } catch { return null; }
 }
-async function verifyCookie(secret, kv, cookieHeader) {
-  const raw = (cookieHeader || "").split(";").map((s) => s.trim())
-    .find((s) => s.startsWith(COOKIE + "="))?.slice(COOKIE.length + 1);
-  if (!raw) return null;
-  const parts = decodeURIComponent(raw).split("|");
-  if (parts.length !== 3) return null;
-  const [email, expires, sig] = parts;
-  if ((await hmacHex(secret, `${email}|${expires}`)) !== sig) return null;
-  if (parseInt(expires, 10) < Date.now() / 1000) return null;
-  const allowed = await store.getList(kv, "allowed");
-  return allowed.includes(email) ? email : null; // revocation ends sessions
+async function sha256(text) {
+  return [...new Uint8Array(await crypto.subtle.digest("SHA-256",new TextEncoder().encode(text)))].map(b=>b.toString(16).padStart(2,"0")).join("");
+}
+function equal(a,b) { if(a.length!==b.length) return false; let n=0; for(let i=0;i<a.length;i++) n|=a.charCodeAt(i)^b.charCodeAt(i); return n===0; }
+async function makeCookie(env, email) {
+  const payload = `v2|${email}|${Math.floor(Date.now()/1000)+TTL}`;
+  return `${payload}|${await hmacHex(env.GANTRY_SECRET, payload + "|" + accessHash(env,email))}`;
+}
+async function verifyCookie(env, kv, header) {
+  try {
+    const raw=(header||"").split(";").map(s=>s.trim()).find(s=>s.startsWith(COOKIE+"="))?.slice(COOKIE.length+1);
+    if(!raw) return null;
+    const parts=decodeURIComponent(raw).replace(/^"|"$/g,"").split("|");
+    if(parts.length!==4) return null;
+    const [version,email,expires,sig]=parts, digest=accessHash(env,email);
+    if(version!=="v2" || !digest || !/^\d+$/.test(expires) || Number(expires)<=Date.now()/1000) return null;
+    if(!equal(await hmacHex(env.GANTRY_SECRET,`${version}|${email}|${expires}|${digest}`),sig)) return null;
+    return (await store.getList(kv,"allowed")).includes(email) ? email : null;
+  } catch { return null; }
+}
+function normalize(c) {
+  return {persona:"",channel:"",cluster:null,cluster_exception:"",operator:null,operator_exception:"",
+    case_against:"",kill_criterion:"",memo_notes:"",research:null,is_demo:false,memo:"",decision:null,...c};
+}
+function researchConfigured(env) {
+  try {const u=new URL(env.GANTRY_RESEARCH_URL);return u.protocol==="https:" && !u.username && !u.password;} catch {return false;}
+}
+function validTimestamp(value) {
+  const [date, clock] = value.split('T');
+  const [year, month, day] = date.split('-').map(Number);
+  const [hour, minute, second] = clock.slice(0,8).split(':').map(Number);
+  const maxDay = new Date(Date.UTC(year,month,0)).getUTCDate();
+  return year >= 1 && month >= 1 && month <= 12 && day >= 1 && day <= maxDay &&
+    hour < 24 && minute < 60 && second < 60 && Number.isFinite(Date.parse(value));
+}
+function validateCorpus(c) {
+  validate("ResearchCorpus",c);
+  const ids=c.sources.map(s=>s.id);
+  if(new Set(ids).size!==ids.length || c.sources.some(s=>!validTimestamp(s.retrieved_at)) ||
+    Object.values(c.proposed_scores).some(p=>p.source_ids.some(id=>!ids.includes(id))))
+    throw {status:502,detail:"Invalid research citations"};
+  return c;
 }
 
 /* ---------- http helpers ---------- */
@@ -207,160 +254,126 @@ const html = (body) => new Response(body, {
 
 export default {
   async fetch(request, env) {
-    const kv = env.GANTRY_KV;
-    const secret = env.GANTRY_SECRET;
-    if (!secret) return err(500, "GANTRY_SECRET is not set (wrangler secret put GANTRY_SECRET)");
-    await store.seedIfNeeded(kv);
-
-    const url = new URL(request.url);
-    const path = url.pathname;
-    const method = request.method;
-    const body = async () => { try { return await request.json(); } catch { return {}; } };
-
-    /* public routes */
-    if (path === "/login") return html(loginHtml);
-    if (path === "/api/login" && method === "POST") {
-      const email = ((await body()).email || "").trim().toLowerCase();
-      const allowed = await store.getList(kv, "allowed");
-      if (!allowed.includes(email))
-        return err(403, "This email is not on the allowlist. Ask an existing member to add it.");
-      return json({ email }, 200, {
-        "Set-Cookie": `${COOKIE}=${await makeCookie(secret, email)}; Max-Age=${TTL}; Path=/; HttpOnly; Secure; SameSite=Lax`,
-      });
-    }
-
-    /* everything else requires a session */
-    const email = await verifyCookie(secret, kv, request.headers.get("Cookie"));
-    if (!email) {
-      if (path.startsWith("/api/")) return err(401, "authentication required");
-      return Response.redirect(new URL("/login", url).toString(), 302);
-    }
-
-    if (path === "/" || path === "") return html(appHtml);
-    if (path === "/api/logout" && method === "POST")
-      return json({ ok: true }, 200, {
-        "Set-Cookie": `${COOKIE}=; Max-Age=0; Path=/; HttpOnly; Secure; SameSite=Lax` });
-    if (path === "/api/me") return json({ email });
-
-    if (path === "/api/summary") {
-      const cs = (await store.candidates(kv)).map(view);
-      const by = { draft: 0, scored: 0, untestable: 0, g0_approved: 0, g0_rejected: 0 };
-      cs.forEach((c) => by[c.status]++);
-      return json({
-        candidates: cs.length, by_status: by,
-        g0_queue: cs.filter((c) => c.status === "scored" && c.decidable).length,
-        clusters: (await store.getList(kv, "clusters")).length,
-        operators: (await store.getList(kv, "operators")).length,
-      });
-    }
-
-    if (path === "/api/candidates" && method === "GET")
-      return json((await store.candidates(kv)).map(view));
-
-    if (path === "/api/candidates" && method === "POST") {
-      const b = await body();
-      const slug = (b.slug || "").trim();
-      if (!/^[a-z0-9][a-z0-9-]*$/.test(slug)) return err(422, "slug must be lowercase-kebab");
-      if (await store.candidate(kv, slug)) return err(409, `candidate '${slug}' already exists`);
-      const c = {
-        slug, name: b.name || slug, one_liner: b.one_liner || "",
-        lane: b.lane === "substitution" ? "substitution" : "vertical",
-        delivery_mode: b.delivery_mode === "service_first" ? "service_first" : "self_serve",
-        persona: b.persona || "", channel: b.channel || "",
-        cluster: b.cluster || null, cluster_exception: b.cluster_exception || "",
-        operator: b.operator || null, operator_exception: b.operator_exception || "",
-        case_against: b.case_against || "", kill_criterion: b.kill_criterion || "",
-        scorecard: { dimensions: {} },
-        thresholds: { g1_reachability: "", g2_engagement: "", g3_retention: "",
-          budget_cap_usd: 2000, time_cap_weeks: 3 },
-        memo: "", decision: null, created_at: new Date().toISOString(),
-      };
-      await store.saveCandidate(kv, c);
-      return json(view(c), 201);
-    }
-
-    if (path === "/api/g0-queue")
-      return json((await store.candidates(kv)).map(view)
-        .filter((c) => ["scored", "untestable"].includes(c.status)));
-
-    const m = path.match(/^\/api\/candidates\/([a-z0-9-]+)(?:\/(\w+))?$/);
-    if (m) {
-      const [, slug, action] = m;
-      const c = await store.candidate(kv, slug);
-      if (!c) return err(404, `no candidate '${slug}'`);
-      if (!action && method === "GET") return json(view(c));
-      const locked = () => c.decision != null;
-      if (action === "score" && method === "POST") {
-        if (locked()) return err(409, "candidate already has a G0 decision; the scorecard is locked");
-        const b = await body();
-        for (const [d, ds] of Object.entries(b.dimensions || {})) {
-          if (!DIMS.includes(d)) continue;
-          const score = Math.round(Number(ds.score));
-          if (score >= 1 && score <= 5)
-            c.scorecard.dimensions[d] = { score, evidence: String(ds.evidence || "") };
-        }
-        await store.saveCandidate(kv, c);
-        return json(view(c));
-      }
-      if (action === "thresholds" && method === "POST") {
-        if (locked()) return err(409, "thresholds are locked at G0; use the extension-memo flow");
-        const b = await body();
-        c.thresholds = {
-          g1_reachability: String(b.g1_reachability || ""),
-          g2_engagement: String(b.g2_engagement || ""),
-          g3_retention: String(b.g3_retention || ""),
-          budget_cap_usd: Number(b.budget_cap_usd) || 0,
-          time_cap_weeks: Number(b.time_cap_weeks) || 0,
-        };
-        await store.saveCandidate(kv, c);
-        return json(view(c));
-      }
-      if (action === "case" && method === "POST") {
-        if (locked()) return err(409, "candidate already has a G0 decision; the case against is locked");
-        const b = await body();
-        c.case_against = String(b.case_against || "");
-        c.kill_criterion = String(b.kill_criterion || "");
-        await store.saveCandidate(kv, c);
-        return json(view(c));
-      }
-      if (action === "decision" && method === "POST") {
-        if (locked()) return err(409, "candidate already decided");
-        const b = await body();
-        if (b.approved && !decidable(c))
-          return err(422, "cannot approve: " + blockers(c).join("; "));
-        c.decision = { approved: !!b.approved, decided_by: email,
-          notes: String(b.notes || ""), decided_at: new Date().toISOString() };
-        await store.saveCandidate(kv, c);
-        return json(view(c));
-      }
-      if (action === "memo" && method === "POST") return json({ memo: draftMemo(c) });
-    }
-
-    for (const [route, key] of [["/api/clusters", "clusters"], ["/api/operators", "operators"]]) {
-      if (path === route && method === "GET") return json(await store.getList(kv, key));
-      if (path === route && method === "POST") {
-        const b = await body();
-        const items = await store.getList(kv, key);
-        if (!/^[a-z0-9][a-z0-9-]*$/.test(b.slug || "")) return err(422, "slug must be lowercase-kebab");
-        if (items.some((i) => i.slug === b.slug)) return err(409, `'${b.slug}' already exists`);
-        items.push(b);
-        await store.putList(kv, key, items);
-        return json(b, 201);
-      }
-    }
-
-    if (path === "/api/allowed-emails" && method === "GET")
-      return json(await store.getList(kv, "allowed"));
-    if (path === "/api/allowed-emails" && method === "POST") {
-      const e = ((await body()).email || "").trim().toLowerCase();
-      if (!/^[^@\s]+@[^@\s]+\.[^@\s]+$/.test(e)) return err(422, "That doesn't look like an email address.");
-      const allowed = await store.getList(kv, "allowed");
-      if (allowed.includes(e)) return err(409, `${e} is already on the allowlist`);
-      allowed.push(e);
-      await store.putList(kv, "allowed", allowed);
-      return json({ email: e }, 201);
-    }
-
-    return err(404, "not found");
-  },
+    try { return await route(request,env); }
+    catch(e) { return err(e.status || 500,e.detail || "Request failed"); }
+  }
 };
+async function route(request, env) {
+  const kv=env.GANTRY_KV, url=new URL(request.url), path=url.pathname, method=request.method;
+  if(!env.GANTRY_SECRET) return err(503,"Session signing secret is not configured");
+  await store.seedIfNeeded(kv);
+  const body=async name=>{
+    let b; try {b=await request.json();} catch {throw {status:422,detail:"Invalid JSON"};}
+    return validate(name,b);
+  };
+  const cookie=value=>`${COOKIE}=${value}; Max-Age=${value?TTL:0}; Path=/; HttpOnly;${url.protocol==="https:"?" Secure;":""} SameSite=Lax`;
+  if(path==="/login" && method==="GET") return html(loginHtml);
+  if(path==="/api/login" && method==="POST") {
+    const b=await body("LoginIn"), email=b.email.trim().toLowerCase(), digest=accessHash(env,email);
+    if(!digest) return err(503,"Reviewer access key is not configured");
+    if(!(await store.getList(kv,"allowed")).includes(email) || !equal(digest,await sha256(b.access_key)))
+      return err(403,"Invalid email or access key");
+    return json({email},200,{"Set-Cookie":cookie(await makeCookie(env,email))});
+  }
+  const email=await verifyCookie(env,kv,request.headers.get("Cookie"));
+  if(!email) return path.startsWith("/api/") ? err(401,"authentication required") : Response.redirect(new URL("/login",url).toString(),307);
+  if(path==="/operations" && method==="GET")return html(operationsHtml);
+  if(path==="/api/operations" || path.startsWith("/api/operations/handoff/") || path.startsWith("/launch-preview/")){
+    if(!env.GANTRY_OPERATIONS)return err(503,"Operations storage is not configured");
+    if(!["GET","POST"].includes(method))return err(405,"Method not allowed");
+    let command;
+    if(method==="POST"){if(path!=="/api/operations")return err(405,"Method not allowed");const raw=await request.text();if(raw.length>512000)return err(413,"Command too large");try{command=JSON.parse(raw);if(!command||typeof command!=="object"||Array.isArray(command))return err(422,"Invalid command");}catch{return err(422,"Invalid JSON");}}
+    const payload={command,context:{actor:email,now:new Date().toISOString(),candidates:command?.action==="launch.create"?await store.candidates(kv):[]},handoff:path.startsWith("/api/operations/handoff/")?path.split('/').pop():null,preview:path.startsWith("/launch-preview/")?path.split('/').pop():null};
+    return env.GANTRY_OPERATIONS.get(env.GANTRY_OPERATIONS.idFromName('studio')).fetch(new Request('https://operations.internal/',{method:'POST',body:JSON.stringify(payload)}));
+  }
+  const clusters=await store.getList(kv,"clusters"), operators=await store.getList(kv,"operators");
+  const refs=c=>[...(c.cluster&&!clusters.some(x=>x.slug===c.cluster)?["unknown cluster"]:[]),
+    ...(c.operator&&!operators.some(x=>x.slug===c.operator)?["unknown operator"]:[])];
+  const output=c=>{const v=view(c);v.blockers.push(...refs(c));v.decidable=!v.blockers.length;return v;};
+  const save=async c=>{c.memo=draftMemo(c);await store.saveCandidate(kv,c);return json(output(c));};
+  if(path==="/" && method==="GET") return html(appHtml);
+  if(path==="/api/me" && method==="GET") return json({email});
+  if(path==="/api/logout" && method==="POST") return json({ok:true},200,{"Set-Cookie":cookie("")});
+  if(path==="/api/research-status" && method==="GET") return json({configured:researchConfigured(env)});
+  if(path==="/api/summary" && method==="GET") {
+    const cs=(await store.candidates(kv)).map(output), by_status={draft:0,scored:0,untestable:0,g0_approved:0,g0_rejected:0};
+    cs.forEach(c=>by_status[c.status]++);
+    return json({candidates:cs.length,demo_candidates:cs.filter(c=>c.is_demo).length,by_status,
+      g0_queue:cs.filter(c=>c.status==="scored"&&c.decidable).length,clusters:clusters.length,operators:operators.length});
+  }
+  if(path==="/api/candidates" && method==="GET") return json((await store.candidates(kv)).map(output));
+  if(path==="/api/candidates" && method==="POST") {
+    const b=await body("CandidateIn");
+    if(await store.candidate(kv,b.slug)) return err(409,`candidate '${b.slug}' already exists`);
+    if(refs(b).length) return err(422,refs(b).join("; "));
+    const c=normalize({...b,scorecard:{dimensions:{}},thresholds:validate("GateThresholds",{}),created_at:new Date().toISOString()});
+    c.memo=draftMemo(c);await store.saveCandidate(kv,c);return json(output(c),201);
+  }
+  if(path==="/api/g0-queue" && method==="GET")
+    return json((await store.candidates(kv)).map(output).filter(c=>["scored","untestable"].includes(c.status)));
+  const m=path.match(/^\/api\/candidates\/([a-z0-9][a-z0-9-]*)(?:\/([a-z-]+))?$/);
+  if(m) {
+    const [,slug,action]=m;
+    let c=await store.candidate(kv,slug);
+    if(!c) return err(404,`no candidate '${slug}'`);
+    if(!action && method==="GET") return json(output(c));
+    if(!["POST","PUT"].includes(method)) return err(405,"Method Not Allowed");
+    if(c.decision) return err(409,"candidate already has a G0 decision; record is locked");
+    if(!action && method==="PUT") {
+      const b=await body("CandidateIn");
+      if(b.slug!==slug) return err(422,"slug is immutable");
+      if(refs(b).length) return err(422,refs(b).join("; "));
+      return save({...c,...b});
+    }
+    if(action==="score" && method==="POST") {c.scorecard=await body("ScoreIn");return save(c);}
+    if(action==="thresholds" && method==="POST") {const t=await body("GateThresholds");if(t.execution_plan)validatePlan(t.execution_plan,c.delivery_mode,t);c.thresholds=t;return save(c);}
+    if(action==="case" && method==="POST") {Object.assign(c,await body("CaseIn"));return save(c);}
+    if(action==="memo" && method==="PUT") {Object.assign(c,await body("MemoIn"));return save(c);}
+    if(action==="memo" && method==="POST") {await save(c);return json({memo:c.memo});}
+    if(action==="decision" && method==="POST") {
+      const b=await body("DecisionIn"), bl=output(c).blockers;
+      if(b.approved && c.thresholds.execution_plan)validatePlan(c.thresholds.execution_plan,c.delivery_mode,c.thresholds);
+      if(b.approved && bl.length) return err(422,"cannot approve: "+bl.join("; "));
+      c.decision={...b,decided_by:email,decided_at:new Date().toISOString()};return save(c);
+    }
+    if(action==="research" && method==="POST") {
+      if(!researchConfigured(env)) return err(503,"Research provider is not configured");
+      const before=JSON.stringify(c); let corpus;
+      try {
+        const input=Object.fromEntries(["slug","name","one_liner","lane","delivery_mode"].map(k=>[k,c[k]]));
+        const r=await fetch(env.GANTRY_RESEARCH_URL,{method:"POST",redirect:"error",signal:AbortSignal.timeout(60000),
+          headers:{"Content-Type":"application/json",...(env.GANTRY_RESEARCH_TOKEN?{Authorization:"Bearer "+env.GANTRY_RESEARCH_TOKEN}:{})},
+          body:JSON.stringify({candidate:input,dimensions:dimensionQuestions})});
+        if(!r.ok) throw Error();const raw=await r.text();if(raw.length>512000) throw Error();
+        corpus=validateCorpus(JSON.parse(raw));
+      } catch {return err(502,"Research provider failed or returned invalid evidence");}
+      c=await store.candidate(kv,slug);
+      if(c.decision || JSON.stringify(c)!==before) return err(409,"Candidate changed during research; run again");
+      c.research=corpus;return save(c);
+    }
+    if(action==="accept-research" && method==="POST") {
+      if(!c.research || !Object.keys(c.research.proposed_scores).length) return err(422,"No proposed scores to accept");
+      for(const [d,p] of Object.entries(c.research.proposed_scores)) {
+        c.scorecard.dimensions[d]={score:p.score,evidence:p.evidence+"\nSources: "+p.source_ids.map(id=>{
+          const s=c.research.sources.find(s=>s.id===id);return s.url+" ("+s.retrieved_at+")";
+        }).join("; ")};
+      }
+      return save(c);
+    }
+    return err(405,"Method Not Allowed");
+  }
+  for(const [route,key,schema,items] of [["/api/clusters","clusters","Cluster",clusters],["/api/operators","operators","Operator",operators]]) {
+    if(path===route && method==="GET") return json(items.map(x=>validate(schema,x)));
+    if(path===route && method==="POST") {
+      const b=await body(schema);if(items.some(x=>x.slug===b.slug)) return err(409,`'${b.slug}' already exists`);
+      await store.putList(kv,key,[...items,b]);return json(b,201);
+    }
+  }
+  if(path==="/api/allowed-emails" && method==="GET") return json(await store.getList(kv,"allowed"));
+  if(path==="/api/allowed-emails" && method==="POST") {
+    const b=await body("AllowedEmailIn"), e=b.email.trim().toLowerCase(), items=await store.getList(kv,"allowed");
+    if(items.includes(e)) return err(409,`${e} is already on the allowlist`);
+    await store.putList(kv,"allowed",[...items,e].sort());return json({email:e},201);
+  }
+  return err(404,"not found");
+}

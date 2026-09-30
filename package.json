@@ -1,0 +1,19 @@
+{
+  "name": "gantry-selection-engine",
+  "private": true,
+  "type": "module",
+  "scripts": {
+    "test:ui": "node --test engine/tests/ui.test.mjs engine/tests/operations-ui.test.mjs",
+    "build:worker": "wrangler deploy --dry-run --config deploy/cloudflare/wrangler.toml --outdir .build/worker",
+    "test:operations": "node --test engine/tests/operations.test.mjs"
+  },
+  "dependencies": {
+    "ajv": "8.17.1",
+    "fflate": "0.8.2"
+  },
+  "devDependencies": {
+    "@playwright/test": "1.56.1",
+    "esbuild": "0.25.10",
+    "wrangler": "4.40.2"
+  }
+}
